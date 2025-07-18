@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=appuser
+      - DB_PASSWORD=apppass
+      - DB_NAME=appdb
+      - JWT_SECRET=supersecret123
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  migrate:
+    image: migrate/migrate:v4.15.2
+    command: -path=/migrations -database postgres://appuser:apppass@db:5432/appdb?sslmode=disable up
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      - db
+
+volumes:
+  pgdata:

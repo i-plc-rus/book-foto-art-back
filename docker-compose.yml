@@ -16,6 +16,8 @@ services:
       - DB_PASSWORD=apppass
       - DB_NAME=appdb
       - JWT_SECRET=supersecret123
+    networks:
+      - app-net
 
   db:
     image: postgres:15
@@ -27,6 +29,8 @@ services:
       - pgdata:/var/lib/postgresql/data
     expose:
       - "5432"
+    networks:
+      - app-net
 
   migrate:
     image: migrate/migrate:v4.15.2
@@ -35,6 +39,10 @@ services:
       - ./migrations:/migrations
     depends_on:
       - db
+    networks:
+      - app-net
 
 volumes:
   pgdata:
+networks:
+  app-net:

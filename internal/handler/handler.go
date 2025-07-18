@@ -3,6 +3,7 @@ package handler
 import (
 	"book-foto-art-back/internal/service"
 	"context"
+	"log"
 	"net/http"
 	"strings"
 
@@ -28,6 +29,7 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 	err := h.svc.Register(c.Request.Context(), input.Email, input.Password)
 	if err != nil {
+		log.Printf("failed to create user: %v", err)
 		c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
 		return
 	}

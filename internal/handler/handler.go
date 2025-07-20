@@ -28,13 +28,15 @@ func (h *Handler) Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
-	err := h.svc.Register(c.Request.Context(), input.UserName, input.Email, input.Password)
+
+	token, err := h.svc.Register(c.Request.Context(), input.UserName, input.Email, input.Password)
 	if err != nil {
-		log.Printf("failed to create user: %v", err)
+		log.Printf("failed to register user: %v", err)
 		c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"message": "User registered"})
+
+	c.JSON(http.StatusCreated, gin.H{"token": token})
 }
 
 func (h *Handler) Login(c *gin.Context) {

@@ -20,12 +20,30 @@ func NewUserService(s *storage.Storage) *UserService {
 	return &UserService{Storage: s}
 }
 
-func (s *UserService) Register(ctx context.Context, username, email, password string) error {
+func (s *UserService) Register(ctx context.Context, username, email, password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return s.Storage.CreateUser(ctx, model.User{UserName: username, Email: email, Password: string(hash)})
+
+	u := model.User{
+		UserName: username,
+		Email:    email,
+		Password: string(hash),
+	}
+
+	if err := s.Storage.CreateUser(ctx, u); err != nil {
+		return "", err
+	}
+
+	// После создания — получаем пользователя из БД (чтобы взять ID)
+	createdUser, err := s.Storage.GetUserByEmail(ctx, email)
+	if err != nil {
+		return "", err
+	}
+
+	// Генерируем JWT токен
+	return generateJWT(createdUser.ID, time.Minute*15)
 }
 
 func (s *UserService) Login(ctx context.Context, email, password string) (string, error) {

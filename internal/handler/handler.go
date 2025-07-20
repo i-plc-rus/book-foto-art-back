@@ -20,6 +20,7 @@ func NewHandler(svc *service.UserService) *Handler {
 
 func (h *Handler) Register(c *gin.Context) {
 	var input struct {
+		UserName string `json:"username"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
@@ -27,7 +28,7 @@ func (h *Handler) Register(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
-	err := h.svc.Register(c.Request.Context(), input.Email, input.Password)
+	err := h.svc.Register(c.Request.Context(), input.UserName, input.Email, input.Password)
 	if err != nil {
 		log.Printf("failed to create user: %v", err)
 		c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})

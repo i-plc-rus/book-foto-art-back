@@ -20,12 +20,12 @@ func NewUserService(s *storage.Storage) *UserService {
 	return &UserService{Storage: s}
 }
 
-func (s *UserService) Register(ctx context.Context, email, password string) error {
+func (s *UserService) Register(ctx context.Context, username, email, password string) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
-	return s.Storage.CreateUser(ctx, model.User{Email: email, Password: string(hash)})
+	return s.Storage.CreateUser(ctx, model.User{UserName: username, Email: email, Password: string(hash)})
 }
 
 func (s *UserService) Login(ctx context.Context, email, password string) (string, error) {

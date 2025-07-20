@@ -5,7 +5,8 @@ curl --location 'http://book-foto-art-back-app-1:8080/auth/register' \
     "password": "Shalimov123!!"
 }'
 
-curl --location 'http://localhost:8080/auth/register' \
+docker exec -it book-foto-art-back-app-1 \
+curl --location 'http://book-foto-art-back-app-1:8080/auth/register' \
 --header 'Content-Type: application/json' \
 --data-raw '{
     "email": "i.plc.rus@gmail.com",

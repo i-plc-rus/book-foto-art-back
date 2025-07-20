@@ -36,7 +36,7 @@ func (s *Storage) GetUserByEmail(ctx context.Context, email string) (*model.User
 	row := s.DB.QueryRow(ctx, "SELECT id, username, email, password FROM users WHERE email=$1", email)
 
 	var u model.User
-	err := row.Scan(&u.ID, &u.Email, &u.Password)
+	err := row.Scan(&u.ID, &u.UserName, &u.Email, &u.Password)
 	if err != nil {
 		return nil, err
 	}

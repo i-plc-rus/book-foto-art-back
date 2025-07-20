@@ -28,7 +28,7 @@ func InitDB() *Storage {
 }
 
 func (s *Storage) CreateUser(ctx context.Context, user model.User) error {
-	_, err := s.DB.Exec(ctx, "INSERT INTO users (username, email, password) VALUES ($1, $2)", user.Email, user.Password)
+	_, err := s.DB.Exec(ctx, "INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", user.UserName, user.Email, user.Password)
 	return err
 }
 

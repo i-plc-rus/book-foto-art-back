@@ -3,7 +3,7 @@ package main
 import (
 	"book-foto-art-back/internal/handler"
 	"book-foto-art-back/internal/service"
-	"book-foto-art-back/internal/storage"
+	"book-foto-art-back/internal/storage/postgres"
 	"log"
 	"time"
 
@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	db := storage.InitDB()
+	db := postgres.InitDB()
 	// Сервисы
 	userService := service.NewUserService(db)
 	collectionService := service.NewCollectionService(db)
@@ -63,7 +63,7 @@ func main() {
 	upload := r.Group("/upload")
 	{
 		upload.Use(h.AuthMiddleware())
-		upload.POST("/file", h.UploadFile)
+		upload.POST("/files", h.UploadFiles)
 	}
 
 	log.Fatal(r.Run(":8080"))

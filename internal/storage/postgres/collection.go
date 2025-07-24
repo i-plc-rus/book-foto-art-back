@@ -13,10 +13,10 @@ type CollectionStorage struct {
 
 func (s *Storage) CreateCollection(ctx context.Context, col model.Collection) (*model.Collection, error) {
 	row := s.DB.QueryRow(ctx,
-		`INSERT INTO collections (name, date, user_id, session_id)
-		 VALUES ($1, $2, $3, $4)
+		`INSERT INTO collections (name, date, user_id)
+		 VALUES ($1, $2, $3)
 		 RETURNING id`,
-		col.Name, col.Date, col.UserID, col.SessionID,
+		col.Name, col.Date, col.UserID,
 	)
 	var id int64
 	if err := row.Scan(&id); err != nil {
@@ -28,15 +28,35 @@ func (s *Storage) CreateCollection(ctx context.Context, col model.Collection) (*
 
 func (s *Storage) GetCollectionByID(ctx context.Context, id int64) (*model.Collection, error) {
 	row := s.DB.QueryRow(ctx,
-		`SELECT id, name, date, user_id, session_id
+		`SELECT id, name, date, user_id
 		 FROM collections
 		 WHERE id = $1`, id,
 	)
 	var col model.Collection
-	if err := row.Scan(&col.ID, &col.Name, &col.Date, &col.UserID, &col.SessionID); err != nil {
+	if err := row.Scan(&col.ID, &col.Name, &col.Date, &col.UserID); err != nil {
 		return nil, err
 	}
 	return &col, nil
+}
+
+func (s *Storage) GetCollections(ctx context.Context, userID int64) ([]model.Collection, error) {
+	rows, err := s.DB.Query(ctx, `SELECT id, name, date FROM collections WHERE user_id = $1 ORDER BY date DESC`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var collections []model.Collection
+	for rows.Next() {
+		var c model.Collection
+		err := rows.Scan(&c.ID, &c.Name, &c.Date)
+		if err != nil {
+			return nil, err
+		}
+		c.UserID = userID
+		collections = append(collections, c)
+	}
+	return collections, nil
 }
 
 func (s *Storage) DeleteCollection(ctx context.Context, id int64) error {

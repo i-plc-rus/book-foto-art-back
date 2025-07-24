@@ -13,8 +13,12 @@ import (
 
 func main() {
 	db := storage.InitDB()
+	// Сервисы
 	userService := service.NewUserService(db)
-	h := handler.NewHandler(userService)
+	collectionService := service.NewCollectionService(db)
+	uploadService := service.NewUploadService(db)
+
+	h := handler.NewHandler(userService, collectionService, uploadService)
 
 	//r := gin.Default()
 	gin.SetMode(gin.ReleaseMode)
@@ -44,6 +48,22 @@ func main() {
 	{
 		profile.Use(h.AuthMiddleware())
 		profile.GET("/", h.GetProfile)
+	}
+
+	// Коллекции
+	collection := r.Group("/collection")
+	{
+		collection.Use(h.AuthMiddleware())
+		collection.POST("/create", h.CreateCollection)
+		collection.GET("/list", h.ListCollections)
+		collection.GET("/:id", h.GetCollection)
+	}
+
+	// Загрузка файлов
+	upload := r.Group("/upload")
+	{
+		upload.Use(h.AuthMiddleware())
+		upload.POST("/file", h.UploadFile)
 	}
 
 	log.Fatal(r.Run(":8080"))

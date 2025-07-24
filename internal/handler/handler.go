@@ -11,11 +11,15 @@ import (
 )
 
 type Handler struct {
-	svc *service.UserService
+	svc               *service.UserService
+	collectionService *service.CollectionService
+	uploadService     *service.UploadService
 }
 
-func NewHandler(svc *service.UserService) *Handler {
-	return &Handler{svc: svc}
+func NewHandler(svc *service.UserService, collectionService *service.CollectionService, uploadService *service.UploadService) *Handler {
+	return &Handler{svc: svc,
+		collectionService: collectionService,
+		uploadService:     uploadService}
 }
 
 func (h *Handler) Register(c *gin.Context) {

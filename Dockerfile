@@ -13,7 +13,9 @@ FROM gcr.io/distroless/static:nonroot
 COPY --from=builder /app/app /app/app
 
 USER root
-RUN mkdir -p /app/uploads && chown -R nonroot:nonroot /app/uploads
+#RUN mkdir -p /app/uploads && chown -R nonroot:nonroot /app/uploads
+RUN mkdir -p /uploads && chown -R nonroot:nonroot /uploads
 # Запускаем как не-root пользователь
 USER nonroot:nonroot
+
 ENTRYPOINT ["/app/app"]

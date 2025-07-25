@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     volumes:
-      - ./uploads:/uploads
+      - /uploads:/uploads
     expose:
       - "8080"
     depends_on:

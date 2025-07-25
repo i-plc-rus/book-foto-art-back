@@ -1,0 +1,7 @@
+CREATE TABLE collections (
+	id BIGSERIAL PRIMARY KEY,
+	user_id BIGINT NOT NULL,
+	name TEXT NOT NULL,
+	date TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);

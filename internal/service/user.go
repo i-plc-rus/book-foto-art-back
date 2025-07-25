@@ -2,7 +2,7 @@ package service
 
 import (
 	"book-foto-art-back/internal/model"
-	"book-foto-art-back/internal/storage"
+	"book-foto-art-back/internal/storage/postgres"
 	"context"
 	"errors"
 	"os"
@@ -13,10 +13,10 @@ import (
 )
 
 type UserService struct {
-	Storage *storage.Storage
+	Storage *postgres.Storage
 }
 
-func NewUserService(s *storage.Storage) *UserService {
+func NewUserService(s *postgres.Storage) *UserService {
 	return &UserService{Storage: s}
 }
 

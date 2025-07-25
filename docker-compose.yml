@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    volumes:
+      - uploads:/app/uploads
     expose:
       - "8080"
     depends_on:
@@ -44,5 +46,6 @@ services:
 
 volumes:
   pgdata:
+  uploads:
 networks:
   app-net:

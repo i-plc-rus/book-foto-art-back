@@ -13,7 +13,7 @@ type UploadStorage struct {
 
 func (s *Storage) SaveUpload(ctx context.Context, upload model.UploadedPhoto) (*model.UploadedPhoto, error) {
 	row := s.DB.QueryRow(ctx,
-		`INSERT INTO uploads (collection_id, original_url, thumbnail_url, file_name, file_ext)
+		`INSERT INTO uploaded_photos (collection_id, original_url, thumbnail_url, file_name, file_ext)
 		 VALUES ($1, $2, $3, $4)
 		 RETURNING id`,
 		upload.CollectionID, upload.OriginalURL, upload.ThumbnailURL, upload.FileName, upload.FileExt,
@@ -29,7 +29,7 @@ func (s *Storage) SaveUpload(ctx context.Context, upload model.UploadedPhoto) (*
 func (s *Storage) GetUploadsByCollection(ctx context.Context, collectionID int64) ([]model.UploadedPhoto, error) {
 	rows, err := s.DB.Query(ctx,
 		`SELECT id, collection_id, original_url, thumbnail_url, file_name, file_ext
-		 FROM uploads
+		 FROM uploaded_photos
 		 WHERE collection_id = $1`, collectionID,
 	)
 	if err != nil {

@@ -148,18 +148,21 @@ func (h *Handler) UploadFiles(c *gin.Context) {
 
 	collectionID, err := strconv.ParseInt(collectionIDStr, 10, 64)
 	if err != nil {
+		log.Printf("Invalid collection ID: %v\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
 		return
 	}
 
 	form, err := c.MultipartForm()
 	if err != nil {
+		log.Printf("Failed to get multipart form: %v\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to get multipart form"})
 		return
 	}
 
 	files := form.File["files"]
 	if len(files) == 0 {
+		log.Printf("No files provided: %v\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No files provided"})
 		return
 	}
@@ -167,6 +170,7 @@ func (h *Handler) UploadFiles(c *gin.Context) {
 	// ✅ Вызов сервиса один раз со всеми файлами
 	results, err := h.uploadService.UploadFiles(c.Request.Context(), userID, collectionID, files)
 	if err != nil {
+		log.Printf("Failed to upload files: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload files"})
 		return
 	}

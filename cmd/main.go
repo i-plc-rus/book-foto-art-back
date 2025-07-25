@@ -24,7 +24,20 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Logger())
-	r.Use(gin.Recovery())
+	//r.Use(gin.Recovery())
+	r.Use(gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
+		// Логируем в консоль
+		if err, ok := recovered.(string); ok {
+			log.Printf("panic recovered: %s\n", err)
+		} else if err, ok := recovered.(error); ok {
+			log.Printf("panic recovered: %v\n", err)
+		} else {
+			log.Printf("panic recovered: unknown error: %v\n", recovered)
+		}
+
+		// Отправляем 500 клиенту
+		c.AbortWithStatusJSON(500, gin.H{"error": "internal server error"})
+	}))
 
 	// Настройка CORS
 	r.Use(cors.New(cors.Config{

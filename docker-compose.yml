@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - uploads:/app/uploads
+      - uploads:/uploads
     expose:
       - "8080"
     depends_on:

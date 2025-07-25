@@ -1,21 +1,21 @@
-# Стадия сборки
+# Stage 1: сборка
 FROM golang:1.23 AS builder
 
 WORKDIR /app
-COPY . .
+COPY go.mod go.sum ./
+RUN go mod download
 
-# Сборка бинарника с отключённым CGO
+COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o app ./cmd
 
-# Финальный образ — минимальный
+# Stage 2: финальный distroless
 FROM gcr.io/distroless/static:nonroot
 
-COPY --from=builder /app/app /app/app
+WORKDIR /app
+COPY --from=builder /app/app .
 
-USER root
-#RUN mkdir -p /app/uploads && chown -R nonroot:nonroot /app/uploads
-RUN mkdir -p /uploads && chown -R nonroot:nonroot /uploads
-# Запускаем как не-root пользователь
-USER nonroot:nonroot
+# /uploads будет монтироваться volume, доступ к нему даст хост
+VOLUME ["/uploads"]
 
+USER nonroot
 ENTRYPOINT ["/app/app"]

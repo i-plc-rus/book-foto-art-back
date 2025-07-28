@@ -34,18 +34,20 @@ func NewHandler(
 
 func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+
 		auth := c.GetHeader("Authorization")
 		if auth == "" || !strings.HasPrefix(auth, "Bearer ") {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
 			return
 		}
+
 		tokenStr := strings.TrimPrefix(auth, "Bearer ")
 		userID, err := service.ParseToken(tokenStr)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			return
 		}
-		c.Set("user_id", userID)
+		c.Set("user_id", userID.String())
 		c.Next()
 	}
 }

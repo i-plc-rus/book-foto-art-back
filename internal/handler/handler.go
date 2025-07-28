@@ -15,67 +15,21 @@ import (
 )
 
 type Handler struct {
-	svc               *service.UserService
+	userService       *service.UserService
 	collectionService *service.CollectionService
 	uploadService     *service.UploadService
 }
 
 func NewHandler(
-	svc *service.UserService,
+	userService *service.UserService,
 	collectionService *service.CollectionService,
 	uploadService *service.UploadService,
 ) *Handler {
-	return &Handler{svc: svc,
+	return &Handler{
+		userService:       userService,
 		collectionService: collectionService,
-		uploadService:     uploadService}
-}
-
-func (h *Handler) Register(c *gin.Context) {
-	var input struct {
-		UserName string `json:"username"`
-		Email    string `json:"email"`
-		Password string `json:"password"`
+		uploadService:     uploadService,
 	}
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-		return
-	}
-
-	token, err := h.svc.Register(c.Request.Context(), input.UserName, input.Email, input.Password)
-	if err != nil {
-		log.Printf("failed to register user: %v", err)
-		c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{"token": token})
-}
-
-func (h *Handler) Login(c *gin.Context) {
-	var input struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-		return
-	}
-	token, err := h.svc.Login(c.Request.Context(), input.Email, input.Password)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"token": token})
-}
-
-func (h *Handler) GetProfile(c *gin.Context) {
-	userID := c.GetInt64("user_id")
-	user, err := h.svc.GetProfile(context.Background(), userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"id": user.ID, "email": user.Email})
 }
 
 func (h *Handler) AuthMiddleware() gin.HandlerFunc {
@@ -104,7 +58,7 @@ func (h *Handler) Refresh(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
-	user, err := h.svc.Storage.GetUserByRefresh(c.Request.Context(), input.RefreshToken)
+	user, err := h.userService.Storage.GetUserByRefresh(c.Request.Context(), input.RefreshToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
 		return
@@ -114,8 +68,63 @@ func (h *Handler) Refresh(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Token error"})
 		return
 	}
-	_ = h.svc.Storage.UpdateRefreshToken(c.Request.Context(), user.ID, refresh)
+	_ = h.userService.Storage.UpdateRefreshToken(c.Request.Context(), user.ID, refresh)
 	c.JSON(http.StatusOK, gin.H{"access_token": access, "refresh_token": refresh})
+}
+
+func (h *Handler) Register(c *gin.Context) {
+	var input struct {
+		UserName string `json:"username"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	token, err := h.userService.Register(c.Request.Context(), input.UserName, input.Email, input.Password)
+	if err != nil {
+		log.Printf("failed to register user: %v", err)
+		c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"token": token})
+}
+
+func (h *Handler) Login(c *gin.Context) {
+	var input struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+	token, err := h.userService.Login(c.Request.Context(), input.Email, input.Password)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func (h *Handler) GetProfile(c *gin.Context) {
+	// Получаем user_id из контекста
+	userIDStr := c.GetString("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+	user, err := h.userService.GetProfile(context.Background(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"id": user.ID, "email": user.Email})
 }
 
 func (h *Handler) CreateCollection(c *gin.Context) {
@@ -151,6 +160,47 @@ func (h *Handler) CreateCollection(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"id": col.ID})
+}
+
+func (h *Handler) GetCollection(c *gin.Context) {
+	collectionIDStr := c.GetString("collection_id")
+	collectionID, err := uuid.Parse(collectionIDStr)
+	if err != nil {
+		log.Printf("Invalid collection ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
+		return
+	}
+
+	collection, err := h.collectionService.GetCollectionByID(c.Request.Context(), collectionID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get collection"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, collection)
+}
+
+func (h *Handler) ListCollections(c *gin.Context) {
+	// Получаем user_id из контекста
+	userIDStr := c.GetString("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	collections, err := h.collectionService.GetCollections(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get collections"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"collections": collections})
 }
 
 func (h *Handler) UploadFiles(c *gin.Context) {
@@ -193,45 +243,4 @@ func (h *Handler) UploadFiles(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"files": results})
-}
-
-func (h *Handler) ListCollections(c *gin.Context) {
-	// Получаем user_id из контекста
-	userIDStr := c.GetString("user_id")
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		log.Printf("Invalid user ID: %v\n", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-		return
-	}
-
-	collections, err := h.collectionService.GetCollections(c.Request.Context(), userID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get collections"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"collections": collections})
-}
-
-func (h *Handler) GetCollection(c *gin.Context) {
-	collectionIDStr := c.GetString("collection_id")
-	collectionID, err := uuid.Parse(collectionIDStr)
-	if err != nil {
-		log.Printf("Invalid collection ID: %v\n", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
-		return
-	}
-
-	collection, err := h.collectionService.GetCollectionByID(c.Request.Context(), collectionID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get collection"})
-		}
-		return
-	}
-
-	c.JSON(http.StatusOK, collection)
 }

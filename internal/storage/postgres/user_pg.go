@@ -29,7 +29,7 @@ func (s *Storage) GetUserByEmail(ctx context.Context, email string) (*model.User
 	return &u, nil
 }
 
-func (s *Storage) GetUserByID(ctx context.Context, id int64) (*model.User, error) {
+func (s *Storage) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	row := s.DB.QueryRow(ctx, "SELECT id, username, email, password FROM users WHERE id=$1", id)
 
 	var u model.User

@@ -7,11 +7,11 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type Handler struct {
@@ -20,7 +20,11 @@ type Handler struct {
 	uploadService     *service.UploadService
 }
 
-func NewHandler(svc *service.UserService, collectionService *service.CollectionService, uploadService *service.UploadService) *Handler {
+func NewHandler(
+	svc *service.UserService,
+	collectionService *service.CollectionService,
+	uploadService *service.UploadService,
+) *Handler {
 	return &Handler{svc: svc,
 		collectionService: collectionService,
 		uploadService:     uploadService}
@@ -124,7 +128,14 @@ func (h *Handler) CreateCollection(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt64("user_id")
+	// Получаем user_id из контекста
+	userIDStr := c.GetString("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
 
 	// Парсим дату (пример)
 	date, err := time.Parse("2006-01-02", input.Date)
@@ -143,10 +154,16 @@ func (h *Handler) CreateCollection(c *gin.Context) {
 }
 
 func (h *Handler) UploadFiles(c *gin.Context) {
-	userID := c.GetInt64("user_id")
-	collectionIDStr := c.PostForm("collection_id")
+	userIDStr := c.GetString("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
 
-	collectionID, err := strconv.ParseInt(collectionIDStr, 10, 64)
+	collectionIDStr := c.GetString("collection_id")
+	collectionID, err := uuid.Parse(collectionIDStr)
 	if err != nil {
 		log.Printf("Invalid collection ID: %v\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
@@ -179,7 +196,14 @@ func (h *Handler) UploadFiles(c *gin.Context) {
 }
 
 func (h *Handler) ListCollections(c *gin.Context) {
-	userID := c.GetInt64("user_id")
+	// Получаем user_id из контекста
+	userIDStr := c.GetString("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
 
 	collections, err := h.collectionService.GetCollections(c.Request.Context(), userID)
 	if err != nil {
@@ -191,11 +215,10 @@ func (h *Handler) ListCollections(c *gin.Context) {
 }
 
 func (h *Handler) GetCollection(c *gin.Context) {
-	//userID := c.GetInt64("user_id")
-	idStr := c.Param("id")
-
-	collectionID, err := strconv.ParseInt(idStr, 10, 64)
+	collectionIDStr := c.GetString("collection_id")
+	collectionID, err := uuid.Parse(collectionIDStr)
 	if err != nil {
+		log.Printf("Invalid collection ID: %v\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
 		return
 	}

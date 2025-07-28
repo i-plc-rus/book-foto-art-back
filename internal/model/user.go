@@ -1,9 +1,11 @@
 package model
 
+import "github.com/google/uuid"
+
 type User struct {
-	ID           int64  `db:"id"`
-	UserName     string `db:"username"`
-	Email        string `db:"email"`
-	Password     string `db:"password"`
-	RefreshToken string `db:"refresh_token"`
+	ID           uuid.UUID `db:"id"`
+	UserName     string    `db:"username"`
+	Email        string    `db:"email"`
+	Password     string    `db:"password"`
+	RefreshToken string    `db:"refresh_token"`
 }

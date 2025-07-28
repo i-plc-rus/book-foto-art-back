@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/disintegration/imaging"
+	"github.com/google/uuid"
 )
 
 type UploadService struct {
@@ -31,7 +32,8 @@ func NewUploadService(s *postgres.Storage) *UploadService {
 	return &UploadService{Storage: s}
 }
 
-func (s *UploadService) UploadFiles(ctx context.Context, userID int64, collectionID int64, files []*multipart.FileHeader) ([]model.UploadedPhoto, error) {
+func (s *UploadService) UploadFiles(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, files []*multipart.FileHeader) (
+	[]model.UploadedPhoto, error) {
 	var results []model.UploadedPhoto
 	//basePath := fmt.Sprintf("./data/user_%d/collection_%d", userID, collectionID)
 	//os.MkdirAll(filepath.Join(basePath, "thumbs"), os.ModePerm)

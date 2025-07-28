@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -74,7 +75,7 @@ func ParseToken(tokenStr string) (int64, error) {
 	return int64(claims["user_id"].(float64)), nil
 }
 
-func generateJWT(userID int64, expiry time.Duration) (string, error) {
+func generateJWT(userID uuid.UUID, expiry time.Duration) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
 		"exp":     time.Now().Add(expiry).Unix(),
@@ -83,7 +84,7 @@ func generateJWT(userID int64, expiry time.Duration) (string, error) {
 	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }
 
-func GenerateTokens(userID int64) (access string, refresh string, err error) {
+func GenerateTokens(userID uuid.UUID) (access string, refresh string, err error) {
 	access, err = generateJWT(userID, time.Minute*15)
 	if err != nil {
 		return

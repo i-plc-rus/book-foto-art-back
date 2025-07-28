@@ -49,6 +49,7 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	// Авторизация
 	auth := r.Group("/auth")
 	{
 		auth.POST("/register", h.Register)
@@ -57,6 +58,7 @@ func main() {
 		//auth.GET("/yandex/callback", h.YandexCallback)
 	}
 
+	// Профиль
 	profile := r.Group("/profile")
 	{
 		profile.Use(h.AuthMiddleware())

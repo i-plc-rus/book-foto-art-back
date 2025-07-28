@@ -4,6 +4,7 @@ import (
 	"book-foto-art-back/internal/model"
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -12,7 +13,8 @@ type UserStorage struct {
 }
 
 func (s *Storage) CreateUser(ctx context.Context, user model.User) error {
-	_, err := s.DB.Exec(ctx, "INSERT INTO users (username, email, password) VALUES ($1, $2, $3)", user.UserName, user.Email, user.Password)
+	_, err := s.DB.Exec(ctx, "INSERT INTO users (username, email, password) VALUES ($1, $2, $3)",
+		user.UserName, user.Email, user.Password)
 	return err
 }
 
@@ -38,7 +40,7 @@ func (s *Storage) GetUserByID(ctx context.Context, id int64) (*model.User, error
 	return &u, nil
 }
 
-func (s *Storage) UpdateRefreshToken(ctx context.Context, id int64, token string) error {
+func (s *Storage) UpdateRefreshToken(ctx context.Context, id uuid.UUID, token string) error {
 	_, err := s.DB.Exec(ctx, "UPDATE users SET refresh_token=$1 WHERE id=$2", token, id)
 	return err
 }

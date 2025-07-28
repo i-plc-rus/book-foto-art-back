@@ -4,6 +4,7 @@ import (
 	"book-foto-art-back/internal/model"
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -18,7 +19,7 @@ func (s *Storage) CreateCollection(ctx context.Context, col model.Collection) (*
 		 RETURNING id`,
 		col.Name, col.Date, col.UserID,
 	)
-	var id int64
+	var id uuid.UUID
 	if err := row.Scan(&id); err != nil {
 		return nil, err
 	}
@@ -26,7 +27,7 @@ func (s *Storage) CreateCollection(ctx context.Context, col model.Collection) (*
 	return &col, nil
 }
 
-func (s *Storage) GetCollectionByID(ctx context.Context, id int64) (*model.Collection, error) {
+func (s *Storage) GetCollectionByID(ctx context.Context, id uuid.UUID) (*model.Collection, error) {
 	row := s.DB.QueryRow(ctx,
 		`SELECT id, name, date, user_id
 		 FROM collections
@@ -39,7 +40,7 @@ func (s *Storage) GetCollectionByID(ctx context.Context, id int64) (*model.Colle
 	return &col, nil
 }
 
-func (s *Storage) GetCollections(ctx context.Context, userID int64) ([]model.Collection, error) {
+func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID) ([]model.Collection, error) {
 	rows, err := s.DB.Query(ctx, `SELECT id, name, date FROM collections WHERE user_id = $1 ORDER BY date DESC`, userID)
 	if err != nil {
 		return nil, err
@@ -59,7 +60,7 @@ func (s *Storage) GetCollections(ctx context.Context, userID int64) ([]model.Col
 	return collections, nil
 }
 
-func (s *Storage) DeleteCollection(ctx context.Context, id int64) error {
+func (s *Storage) DeleteCollection(ctx context.Context, id uuid.UUID) error {
 	_, err := s.DB.Exec(ctx, "DELETE FROM collections WHERE id = $1", id)
 	return err
 }

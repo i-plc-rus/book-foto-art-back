@@ -5,12 +5,13 @@ go 1.23.0
 toolchain go1.23.4
 
 require (
+	github.com/disintegration/imaging v1.6.2
 	github.com/gin-contrib/cors v1.7.6
 	github.com/gin-gonic/gin v1.10.1
+	github.com/google/uuid v1.5.0
 )
 
 require (
-	github.com/disintegration/imaging v1.6.2 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect

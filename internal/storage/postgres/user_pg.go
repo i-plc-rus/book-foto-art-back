@@ -33,7 +33,7 @@ func (s *Storage) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, e
 	row := s.DB.QueryRow(ctx, "SELECT id, username, email, password FROM users WHERE id=$1", id)
 
 	var u model.User
-	err := row.Scan(&u.ID, &u.Email, &u.Password)
+	err := row.Scan(&u.ID, &u.UserName, &u.Email, &u.Password)
 	if err != nil {
 		return nil, err
 	}

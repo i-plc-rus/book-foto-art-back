@@ -1,6 +1,6 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   username TEXT UNIQUE NOT NULL DEFAULT '',
   email TEXT UNIQUE NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE users (
   refresh_token TEXT
 );
 
-CREATE TABLE collections (
+CREATE TABLE IF NOT EXISTS collections (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE collections (
   created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
-CREATE TABLE uploaded_photos (
+CREATE TABLE IF NOT EXISTS uploaded_photos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   collection_id UUID NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,

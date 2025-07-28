@@ -165,7 +165,7 @@ func (h *Handler) CreateCollection(c *gin.Context) {
 }
 
 func (h *Handler) GetCollection(c *gin.Context) {
-	collectionIDStr := c.GetString("collection_id")
+	collectionIDStr := c.Param("id")
 	collectionID, err := uuid.Parse(collectionIDStr)
 	if err != nil {
 		log.Printf("Invalid collection ID: %v\n", err)

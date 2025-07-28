@@ -58,21 +58,28 @@ func (s *UserService) Login(ctx context.Context, email, password string) (string
 	return generateJWT(u.ID, time.Minute*15)
 }
 
-func (s *UserService) GetProfile(ctx context.Context, id int64) (*model.User, error) {
+func (s *UserService) GetProfile(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	return s.Storage.GetUserByID(ctx, id)
 }
 
 // --- JWT helper ---
-
-func ParseToken(tokenStr string) (int64, error) {
+func ParseToken(tokenStr string) (uuid.UUID, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})
 	if err != nil || !token.Valid {
-		return 0, errors.New("invalid token")
+		return uuid.Nil, errors.New("invalid token")
 	}
 	claims := token.Claims.(jwt.MapClaims)
-	return int64(claims["user_id"].(float64)), nil
+	userIDStr, ok := claims["user_id"].(string)
+	if !ok {
+		return uuid.Nil, errors.New("user_id not found or not a string")
+	}
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		return uuid.Nil, errors.New("invalid user_id format")
+	}
+	return userID, nil
 }
 
 func generateJWT(userID uuid.UUID, expiry time.Duration) (string, error) {

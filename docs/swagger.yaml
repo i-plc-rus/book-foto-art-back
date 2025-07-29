@@ -129,7 +129,7 @@ definitions:
           $ref: '#/definitions/model.UploadFile'
         type: array
     type: object
-host: localhost:8080
+host: api.bookfoto.art
 info:
   contact: {}
   description: API для сервиса BookFotoArt
@@ -333,4 +333,6 @@ paths:
       summary: Загрузка файлов
       tags:
       - Upload
+schemes:
+- https
 swagger: "2.0"

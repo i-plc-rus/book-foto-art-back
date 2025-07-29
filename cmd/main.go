@@ -19,8 +19,9 @@ import (
 // @title BookFotoArt API
 // @version 1.0
 // @description API для сервиса BookFotoArt
-// @host localhost:8080
+// @host api.bookfoto.art
 // @BasePath /
+// @schemes https
 func main() {
 
 	// // Загрузка переменных окружения (local)

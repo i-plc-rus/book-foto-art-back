@@ -223,6 +223,16 @@ func (h *Handler) CreateCollection(c *gin.Context) {
 // @Failure      404 {object} model.ErrorMessage
 // @Router       /collection/{id} [get]
 func (h *Handler) GetCollection(c *gin.Context) {
+	// Получаем user_id из контекста
+	userIDStr := c.GetString("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// Получаем collection_id из URL
 	collectionIDStr := c.Param("id")
 	collectionID, err := uuid.Parse(collectionIDStr)
 	if err != nil {
@@ -231,7 +241,7 @@ func (h *Handler) GetCollection(c *gin.Context) {
 		return
 	}
 
-	collection, err := h.collectionService.GetCollectionByID(c.Request.Context(), collectionID)
+	collection, err := h.collectionService.GetCollectionByID(c.Request.Context(), userID, collectionID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
@@ -270,6 +280,49 @@ func (h *Handler) ListCollections(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"collections": collections})
+}
+
+// DeleteCollection godoc
+// @Summary      Удалить коллекцию
+// @Description  Удаление коллекции по ID
+// @Tags         Collection
+// @Accept       json
+// @Produce      json
+// @Param        id path string true "ID коллекции"
+// @Success      200 {object} model.DeleteCollectionResponse
+// @Failure      404 {object} model.ErrorMessage
+// @Failure      400 {object} model.ErrorMessage
+// @Router       /collection/{id} [delete]
+func (h *Handler) DeleteCollection(c *gin.Context) {
+	// Получаем user_id из контекста
+	userIDStr := c.GetString("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// Получаем collection_id из URL
+	collectionIDStr := c.Param("id")
+	collectionID, err := uuid.Parse(collectionIDStr)
+	if err != nil {
+		log.Printf("Invalid collection ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
+		return
+	}
+
+	err = h.collectionService.DeleteCollection(c.Request.Context(), userID, collectionID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete collection"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
 }
 
 // UploadFiles godoc

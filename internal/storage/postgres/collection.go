@@ -3,6 +3,7 @@ package postgres
 import (
 	"book-foto-art-back/internal/model"
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -27,11 +28,11 @@ func (s *Storage) CreateCollection(ctx context.Context, col model.Collection) (*
 	return &col, nil
 }
 
-func (s *Storage) GetCollectionByID(ctx context.Context, id uuid.UUID) (*model.Collection, error) {
+func (s *Storage) GetCollectionByID(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) (*model.Collection, error) {
 	row := s.DB.QueryRow(ctx,
 		`SELECT id, user_id, name, date, created_at
 		 FROM collections
-		 WHERE id = $1`, id,
+		 WHERE user_id = $1 AND id = $2`, userID, collectionID,
 	)
 	var col model.Collection
 	if err := row.Scan(&col.ID, &col.UserID, &col.Name, &col.Date, &col.CreatedAt); err != nil {
@@ -60,7 +61,14 @@ func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID) ([]model
 	return collections, nil
 }
 
-func (s *Storage) DeleteCollection(ctx context.Context, id uuid.UUID) error {
-	_, err := s.DB.Exec(ctx, "DELETE FROM collections WHERE id = $1", id)
-	return err
+func (s *Storage) DeleteCollection(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) error {
+	res, err := s.DB.Exec(ctx, "DELETE FROM collections WHERE user_id = $1 AND id = $2", userID, collectionID)
+	if err != nil {
+		return err
+	}
+	rowsAffected := res.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
 }

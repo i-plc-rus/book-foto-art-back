@@ -61,6 +61,10 @@ type CollectionsListResponse struct {
 	Collections []CollectionResponse `json:"collections"`
 }
 
+type DeleteCollectionResponse struct {
+	Success bool `json:"success" example:"true"`
+}
+
 type UploadFilesRequest struct {
 	UserID       string                  `form:"user_id" example:"06301788-e325-488f-94b5-1711e211b82a"`
 	CollectionID string                  `form:"collection_id" example:"06301788-e325-488f-94b5-1711e211b82a"`

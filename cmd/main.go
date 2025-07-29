@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "book-foto-art-back/docs"
 	"book-foto-art-back/internal/handler"
 	"book-foto-art-back/internal/service"
 	"book-foto-art-back/internal/storage/postgres"
@@ -9,15 +10,33 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	// "github.com/joho/godotenv"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// @title BookFotoArt API
+// @version 1.0
+// @description API для сервиса BookFotoArt
+// @host localhost:8080
+// @BasePath /
 func main() {
+
+	// // Загрузка переменных окружения (local)
+	// if err := godotenv.Load(".env.local"); err != nil {
+	// 	log.Println("Error loading .env.local file")
+	// }
+
+	// БД
 	db := postgres.InitDB()
+
 	// Сервисы
 	userService := service.NewUserService(db)
 	collectionService := service.NewCollectionService(db)
 	uploadService := service.NewUploadService(db)
 
+	// Обработчик
 	h := handler.NewHandler(userService, collectionService, uploadService)
 
 	//r := gin.Default()
@@ -34,7 +53,6 @@ func main() {
 		} else {
 			log.Printf("panic recovered: unknown error: %v\n", recovered)
 		}
-
 		// Отправляем 500 клиенту
 		c.AbortWithStatusJSON(500, gin.H{"error": "internal server error"})
 	}))
@@ -80,6 +98,9 @@ func main() {
 		upload.Use(h.AuthMiddleware())
 		upload.POST("/files", h.UploadFiles)
 	}
+
+	// Swagger
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	log.Fatal(r.Run(":8080"))
 }

@@ -34,7 +34,6 @@ func NewHandler(
 
 func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 		auth := c.GetHeader("Authorization")
 		if auth == "" || !strings.HasPrefix(auth, "Bearer ") {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Missing token"})
@@ -52,6 +51,16 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
+// Refresh godoc
+// @Summary      Обновление токена
+// @Description  Обновляет access и refresh токены
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        input body model.RefreshRequest true "Refresh токен"
+// @Success      200 {object} model.RefreshResponse
+// @Failure      401 {object} model.ErrorMessage
+// @Router       /auth/refresh [post]
 func (h *Handler) Refresh(c *gin.Context) {
 	var input struct {
 		RefreshToken string `json:"refresh_token"`
@@ -74,6 +83,16 @@ func (h *Handler) Refresh(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"access_token": access, "refresh_token": refresh})
 }
 
+// Register godoc
+// @Summary      Регистрация пользователя
+// @Description  Создаёт нового пользователя
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        input body model.RegisterRequest true "Данные для регистрации"
+// @Success      201 {object} model.TokenResponse
+// @Failure      400 {object} model.ErrorMessage
+// @Router       /auth/register [post]
 func (h *Handler) Register(c *gin.Context) {
 	var input struct {
 		UserName string `json:"username"`
@@ -95,6 +114,16 @@ func (h *Handler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"token": token})
 }
 
+// Login godoc
+// @Summary      Аутентификация пользователя
+// @Description  Аутентифицирует пользователя
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        input body model.LoginRequest true "Данные для входа"
+// @Success      200 {object} model.TokenResponse
+// @Failure      401 {object} model.ErrorMessage
+// @Router       /auth/login [post]
 func (h *Handler) Login(c *gin.Context) {
 	var input struct {
 		Email    string `json:"email"`
@@ -112,6 +141,15 @@ func (h *Handler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"token": token})
 }
 
+// GetProfile godoc
+// @Summary      Получить профиль пользователя
+// @Description  Возвращает данные профиля текущего пользователя
+// @Tags         Profile
+// @Accept       json
+// @Produce      json
+// @Success      200 {object} model.ProfileResponse
+// @Failure      400 {object} model.ErrorMessage
+// @Router       /profile/ [get]
 func (h *Handler) GetProfile(c *gin.Context) {
 	// Получаем user_id из контекста
 	userIDStr := c.GetString("user_id")
@@ -129,6 +167,16 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": user.ID, "email": user.Email})
 }
 
+// CreateCollection godoc
+// @Summary      Создать коллекцию
+// @Description  Создаёт новую коллекцию для пользователя
+// @Tags         Collection
+// @Accept       json
+// @Produce      json
+// @Param        input body model.CreateCollectionRequest true "Данные коллекции"
+// @Success      201 {object} model.CreateCollectionResponse
+// @Failure      400 {object} model.ErrorMessage
+// @Router       /collection/create [post]
 func (h *Handler) CreateCollection(c *gin.Context) {
 	var input struct {
 		Name string `json:"name"`
@@ -164,6 +212,16 @@ func (h *Handler) CreateCollection(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"id": col.ID})
 }
 
+// GetCollection godoc
+// @Summary      Получить коллекцию
+// @Description  Возвращает коллекцию по ID
+// @Tags         Collection
+// @Accept       json
+// @Produce      json
+// @Param        id path string true "ID коллекции"
+// @Success      200 {object} model.CollectionResponse
+// @Failure      404 {object} model.ErrorMessage
+// @Router       /collection/{id} [get]
 func (h *Handler) GetCollection(c *gin.Context) {
 	collectionIDStr := c.Param("id")
 	collectionID, err := uuid.Parse(collectionIDStr)
@@ -186,6 +244,15 @@ func (h *Handler) GetCollection(c *gin.Context) {
 	c.JSON(http.StatusOK, collection)
 }
 
+// ListCollections godoc
+// @Summary      Список коллекций
+// @Description  Возвращает список коллекций пользователя
+// @Tags         Collection
+// @Accept       json
+// @Produce      json
+// @Success      200 {object} model.CollectionsListResponse
+// @Failure      400 {object} model.ErrorMessage
+// @Router       /collection/list [get]
 func (h *Handler) ListCollections(c *gin.Context) {
 	// Получаем user_id из контекста
 	userIDStr := c.GetString("user_id")
@@ -205,8 +272,19 @@ func (h *Handler) ListCollections(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"collections": collections})
 }
 
+// UploadFiles godoc
+// @Summary      Загрузка файлов
+// @Description  Загружает файлы в коллекцию
+// @Tags         Upload
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        collection_id formData string true "ID коллекции"
+// @Param        file formData file true "Файл для загрузки"
+// @Success      200 {object} model.UploadFilesResponse
+// @Failure      400 {object} model.ErrorMessage
+// @Router       /upload/files [post]
 func (h *Handler) UploadFiles(c *gin.Context) {
-	userIDStr := c.GetString("user_id")
+	userIDStr := c.PostForm("user_id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
 		log.Printf("Invalid user ID: %v\n", err)
@@ -214,7 +292,7 @@ func (h *Handler) UploadFiles(c *gin.Context) {
 		return
 	}
 
-	collectionIDStr := c.GetString("collection_id")
+	collectionIDStr := c.PostForm("collection_id")
 	collectionID, err := uuid.Parse(collectionIDStr)
 	if err != nil {
 		log.Printf("Invalid collection ID: %v\n", err)

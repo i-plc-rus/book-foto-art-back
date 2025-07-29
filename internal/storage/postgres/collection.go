@@ -34,7 +34,7 @@ func (s *Storage) GetCollectionByID(ctx context.Context, id uuid.UUID) (*model.C
 		 WHERE id = $1`, id,
 	)
 	var col model.Collection
-	if err := row.Scan(&col.ID, &col.Name, &col.Date, &col.UserID, &col.CreatedAt); err != nil {
+	if err := row.Scan(&col.ID, &col.UserID, &col.Name, &col.Date, &col.CreatedAt); err != nil {
 		return nil, err
 	}
 	return &col, nil

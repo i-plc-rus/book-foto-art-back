@@ -1,0 +1,338 @@
+basePath: /
+definitions:
+  model.CollectionResponse:
+    properties:
+      created_at:
+        example: 2025-0715:12:00Z
+        type: string
+      date:
+        example: "2025-07-20T00:00:00Z"
+        type: string
+      id:
+        example: 06301788-e325-488f-94b5-1711e211b82a
+        type: string
+      name:
+        example: My Collection
+        type: string
+      user_id:
+        example: 06301788-e325-488f-94b5-1711e211b82a
+        type: string
+    type: object
+  model.CollectionsListResponse:
+    properties:
+      collections:
+        items:
+          $ref: '#/definitions/model.CollectionResponse'
+        type: array
+    type: object
+  model.CreateCollectionRequest:
+    properties:
+      date:
+        example: "2025-07-28T00:00:00Z"
+        type: string
+      name:
+        example: My Collection
+        type: string
+    type: object
+  model.CreateCollectionResponse:
+    properties:
+      id:
+        example: 06301788-e325-488f-94b5-1711e211b82a
+        type: string
+    type: object
+  model.ErrorMessage:
+    properties:
+      error:
+        example: Invalid credentials
+        type: string
+    type: object
+  model.LoginRequest:
+    properties:
+      email:
+        example: user1@example.com
+        type: string
+      password:
+        example: password123
+        type: string
+    type: object
+  model.ProfileResponse:
+    properties:
+      email:
+        example: user1@example.com
+        type: string
+      id:
+        example: 06301788-e325-488f-94b5-1711e211b82a
+        type: string
+    type: object
+  model.RefreshRequest:
+    properties:
+      refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  model.RefreshResponse:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  model.RegisterRequest:
+    properties:
+      email:
+        example: user1@example.com
+        type: string
+      password:
+        example: password123
+        type: string
+      username:
+        example: user1
+        type: string
+    type: object
+  model.TokenResponse:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  model.UploadFile:
+    properties:
+      collection_id:
+        example: 06301788-e325-488f-94b5-1711e211b82a
+        type: string
+      file_ext:
+        type: string
+      file_name:
+        type: string
+      hash_name:
+        type: string
+      id:
+        example: 06301788-e325-488f-94b5-1711e211b82a
+        type: string
+      original_url:
+        type: string
+      thumbnail_url:
+        type: string
+      uploaded_at:
+        example: 2025-0715:12:00Z
+        type: string
+      user_id:
+        example: 06301788-e325-488f-94b5-1711e211b82a
+        type: string
+    type: object
+  model.UploadFilesResponse:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/model.UploadFile'
+        type: array
+    type: object
+host: api.bookfoto.art
+info:
+  contact: {}
+  description: API для сервиса BookFotoArt
+  title: BookFotoArt API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Аутентифицирует пользователя
+      parameters:
+      - description: Данные для входа
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.TokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Аутентификация пользователя
+      tags:
+      - Auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Обновляет access и refresh токены
+      parameters:
+      - description: Refresh токен
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.RefreshResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Обновление токена
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт нового пользователя
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Регистрация пользователя
+      tags:
+      - Auth
+  /collection/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает коллекцию по ID
+      parameters:
+      - description: ID коллекции
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.CollectionResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Получить коллекцию
+      tags:
+      - Collection
+  /collection/create:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт новую коллекцию для пользователя
+      parameters:
+      - description: Данные коллекции
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.CreateCollectionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/model.CreateCollectionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Создать коллекцию
+      tags:
+      - Collection
+  /collection/list:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список коллекций пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.CollectionsListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Список коллекций
+      tags:
+      - Collection
+  /profile/:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает данные профиля текущего пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.ProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Получить профиль пользователя
+      tags:
+      - Profile
+  /upload/files:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Загружает файлы в коллекцию
+      parameters:
+      - description: ID коллекции
+        in: formData
+        name: collection_id
+        required: true
+        type: string
+      - description: Файл для загрузки
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.UploadFilesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Загрузка файлов
+      tags:
+      - Upload
+schemes:
+- https
+swagger: "2.0"

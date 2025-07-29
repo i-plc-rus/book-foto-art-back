@@ -26,8 +26,8 @@ func (s *CollectionService) CreateCollection(ctx context.Context, userID uuid.UU
 	return s.Storage.CreateCollection(ctx, collection)
 }
 
-func (s *CollectionService) GetCollectionByID(ctx context.Context, collectionID uuid.UUID) (*model.Collection, error) {
-	return s.Storage.GetCollectionByID(ctx, collectionID)
+func (s *CollectionService) GetCollectionByID(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) (*model.Collection, error) {
+	return s.Storage.GetCollectionByID(ctx, userID, collectionID)
 }
 
 func (s *CollectionService) GetCollections(ctx context.Context, userID uuid.UUID) ([]model.Collection, error) {
@@ -35,5 +35,5 @@ func (s *CollectionService) GetCollections(ctx context.Context, userID uuid.UUID
 }
 
 func (s *CollectionService) DeleteCollection(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) error {
-	return s.Storage.DeleteCollection(ctx, collectionID)
+	return s.Storage.DeleteCollection(ctx, userID, collectionID)
 }

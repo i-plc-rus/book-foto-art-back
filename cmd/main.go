@@ -91,6 +91,7 @@ func main() {
 		collection.POST("/create", h.CreateCollection)
 		collection.GET("/list", h.ListCollections)
 		collection.GET("/:id", h.GetCollection)
+		collection.DELETE("/:id", h.DeleteCollection)
 	}
 
 	// Загрузка файлов

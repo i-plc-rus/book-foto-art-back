@@ -40,6 +40,12 @@ definitions:
         example: 06301788-e325-488f-94b5-1711e211b82a
         type: string
     type: object
+  model.DeleteCollectionResponse:
+    properties:
+      success:
+        example: true
+        type: boolean
+    type: object
   model.ErrorMessage:
     properties:
       error:
@@ -215,6 +221,34 @@ paths:
       tags:
       - Auth
   /collection/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаление коллекции по ID
+      parameters:
+      - description: ID коллекции
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.DeleteCollectionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Удалить коллекцию
+      tags:
+      - Collection
     get:
       consumes:
       - application/json

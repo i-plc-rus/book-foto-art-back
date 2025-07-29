@@ -29,12 +29,12 @@ func (s *Storage) CreateCollection(ctx context.Context, col model.Collection) (*
 
 func (s *Storage) GetCollectionByID(ctx context.Context, id uuid.UUID) (*model.Collection, error) {
 	row := s.DB.QueryRow(ctx,
-		`SELECT id, name, date, user_id
+		`SELECT id, user_id, name, date, created_at
 		 FROM collections
 		 WHERE id = $1`, id,
 	)
 	var col model.Collection
-	if err := row.Scan(&col.ID, &col.Name, &col.Date, &col.UserID); err != nil {
+	if err := row.Scan(&col.ID, &col.Name, &col.Date, &col.UserID, &col.CreatedAt); err != nil {
 		return nil, err
 	}
 	return &col, nil

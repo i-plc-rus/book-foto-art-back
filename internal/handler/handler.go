@@ -337,7 +337,8 @@ func (h *Handler) DeleteCollection(c *gin.Context) {
 // @Failure      400 {object} model.ErrorMessage
 // @Router       /upload/files [post]
 func (h *Handler) UploadFiles(c *gin.Context) {
-	userIDStr := c.PostForm("user_id")
+	// Получаем user_id из контекста
+	userIDStr := c.GetString("user_id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
 		log.Printf("Invalid user ID: %v\n", err)
@@ -345,6 +346,7 @@ func (h *Handler) UploadFiles(c *gin.Context) {
 		return
 	}
 
+	// Получаем collection_id из формы
 	collectionIDStr := c.PostForm("collection_id")
 	collectionID, err := uuid.Parse(collectionIDStr)
 	if err != nil {

@@ -37,7 +37,7 @@ func (s *UploadService) UploadFiles(ctx context.Context, userID uuid.UUID, colle
 	var results []model.UploadedPhoto
 	//basePath := fmt.Sprintf("./data/user_%d/collection_%d", userID, collectionID)
 	//os.MkdirAll(filepath.Join(basePath, "thumbs"), os.ModePerm)
-	basePath := fmt.Sprintf("/uploads/user_%d/collection_%d", userID, collectionID)
+	basePath := fmt.Sprintf("/uploads/collection_%s", collectionID.String())
 	thumbsPath := filepath.Join(basePath, "thumbs")
 
 	// Создаём директории

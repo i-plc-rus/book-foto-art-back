@@ -12,12 +12,12 @@ type UploadStorage struct {
 	DB *pgxpool.Pool
 }
 
-func (s *Storage) SaveUpload(ctx context.Context, upload model.UploadedPhoto) (*model.UploadedPhoto, error) {
+func (s *Storage) SaveUpload(ctx context.Context, upload *model.UploadedPhoto) (*model.UploadedPhoto, error) {
 	row := s.DB.QueryRow(ctx,
 		`INSERT INTO uploaded_photos
-    (collection_id, user_id, original_url, thumbnail_url, file_name, file_ext, hash_name)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
-     RETURNING id`,
+    	 (collection_id, user_id, original_url, thumbnail_url, file_name, file_ext, hash_name)
+     	 VALUES ($1, $2, $3, $4, $5, $6, $7)
+     	 RETURNING id`,
 		upload.CollectionID, upload.UserID, upload.OriginalURL, upload.ThumbnailURL,
 		upload.FileName, upload.FileExt, upload.HashName,
 	)
@@ -26,7 +26,7 @@ func (s *Storage) SaveUpload(ctx context.Context, upload model.UploadedPhoto) (*
 		return nil, err
 	}
 	upload.ID = id
-	return &upload, nil
+	return upload, nil
 }
 
 func (s *Storage) GetUploadsByCollection(ctx context.Context, collectionID int64) ([]model.UploadedPhoto, error) {

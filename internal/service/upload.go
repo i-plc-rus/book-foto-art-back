@@ -77,7 +77,7 @@ func (s *UploadService) UploadFiles(ctx context.Context, userID uuid.UUID, colle
 			_ = imaging.Save(thumb, thumbPath)
 		}
 
-		upload := model.UploadedPhoto{
+		upload := &model.UploadedPhoto{
 			UserID:       userID,
 			CollectionID: collectionID,
 			FileName:     fileHeader.Filename,
@@ -88,12 +88,12 @@ func (s *UploadService) UploadFiles(ctx context.Context, userID uuid.UUID, colle
 			UploadedAt:   time.Now(),
 		}
 
-		_, err = s.Storage.SaveUpload(ctx, upload)
+		res, err := s.Storage.SaveUpload(ctx, upload)
 		if err != nil {
 			return nil, err
 		}
 
-		results = append(results, upload)
+		results = append(results, *res)
 	}
 
 	return results, nil

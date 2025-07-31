@@ -412,9 +412,9 @@ paths:
         name: collection_id
         required: true
         type: string
-      - description: Файл для загрузки
+      - description: Файлы для загрузки
         in: formData
-        name: file
+        name: files
         required: true
         type: file
       produces:

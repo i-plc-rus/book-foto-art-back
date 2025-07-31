@@ -380,8 +380,8 @@ const docTemplate = `{
                     },
                     {
                         "type": "file",
-                        "description": "Файл для загрузки",
-                        "name": "file",
+                        "description": "Файлы для загрузки",
+                        "name": "files",
                         "in": "formData",
                         "required": true
                     }

@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  model.CollectionResponse:
+  model.CollectionInfoResponse:
     properties:
       created_at:
         example: 2025-0715:12:00Z
@@ -18,11 +18,21 @@ definitions:
         example: 06301788-e325-488f-94b5-1711e211b82a
         type: string
     type: object
+  model.CollectionPhotosResponse:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/model.UploadedPhoto'
+        type: array
+      sort:
+        example: uploaded_new
+        type: string
+    type: object
   model.CollectionsListResponse:
     properties:
       collections:
         items:
-          $ref: '#/definitions/model.CollectionResponse'
+          $ref: '#/definitions/model.CollectionInfoResponse'
         type: array
     type: object
   model.CreateCollectionRequest:
@@ -103,7 +113,14 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
     type: object
-  model.UploadFile:
+  model.UploadFilesResponse:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/model.UploadedFile'
+        type: array
+    type: object
+  model.UploadedFile:
     properties:
       collection_id:
         example: 06301788-e325-488f-94b5-1711e211b82a
@@ -128,12 +145,26 @@ definitions:
         example: 06301788-e325-488f-94b5-1711e211b82a
         type: string
     type: object
-  model.UploadFilesResponse:
+  model.UploadedPhoto:
     properties:
-      files:
-        items:
-          $ref: '#/definitions/model.UploadFile'
-        type: array
+      collection_id:
+        type: string
+      file_ext:
+        type: string
+      file_name:
+        type: string
+      hash_name:
+        type: string
+      id:
+        type: string
+      original_url:
+        type: string
+      thumbnail_url:
+        type: string
+      uploaded_at:
+        type: string
+      user_id:
+        type: string
     type: object
 host: api.bookfoto.art
 info:
@@ -252,7 +283,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Возвращает коллекцию по ID
+      description: Возвращает информацию о коллекции по ID
       parameters:
       - description: ID коллекции
         in: path
@@ -265,12 +296,45 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.CollectionResponse'
+            $ref: '#/definitions/model.CollectionInfoResponse'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/model.ErrorMessage'
-      summary: Получить коллекцию
+      summary: Получить информацию о коллекции
+      tags:
+      - Collection
+  /collection/{id}/photos:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список фотографий в коллекции пользователя с возможностью
+        сортировки.
+      parameters:
+      - description: ID коллекции
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 'Сортировка. Возможные значения: uploaded_new (по дате загрузки,
+          новые сверху), uploaded_old (по дате загрузки, старые сверху), name_az (по
+          имени файла, A-Z), name_za (по имени файла, Z-A), random (случайный порядок).
+          По умолчанию: uploaded_new'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.CollectionPhotosResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Получить фотографии коллекции
       tags:
       - Collection
   /collection/create:

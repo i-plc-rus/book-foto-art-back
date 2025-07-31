@@ -90,8 +90,9 @@ func main() {
 		collection.Use(h.AuthMiddleware())
 		collection.POST("/create", h.CreateCollection)
 		collection.GET("/list", h.ListCollections)
-		collection.GET("/:id", h.GetCollection)
+		collection.GET("/:id", h.GetCollectionInfo)
 		collection.DELETE("/:id", h.DeleteCollection)
+		collection.GET("/:id/photos", h.GetCollectionPhotos)
 	}
 
 	// Загрузка файлов

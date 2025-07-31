@@ -206,7 +206,7 @@ const docTemplate = `{
         },
         "/collection/{id}": {
             "get": {
-                "description": "Возвращает коллекцию по ID",
+                "description": "Возвращает информацию о коллекции по ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -216,7 +216,7 @@ const docTemplate = `{
                 "tags": [
                     "Collection"
                 ],
-                "summary": "Получить коллекцию",
+                "summary": "Получить информацию о коллекции",
                 "parameters": [
                     {
                         "type": "string",
@@ -230,7 +230,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.CollectionResponse"
+                            "$ref": "#/definitions/model.CollectionInfoResponse"
                         }
                     },
                     "404": {
@@ -273,6 +273,50 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    }
+                }
+            }
+        },
+        "/collection/{id}/photos": {
+            "get": {
+                "description": "Возвращает список фотографий в коллекции пользователя с возможностью сортировки.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Collection"
+                ],
+                "summary": "Получить фотографии коллекции",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID коллекции",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Сортировка. Возможные значения: uploaded_new (по дате загрузки, новые сверху), uploaded_old (по дате загрузки, старые сверху), name_az (по имени файла, A-Z), name_za (по имени файла, Z-A), random (случайный порядок). По умолчанию: uploaded_new",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.CollectionPhotosResponse"
                         }
                     },
                     "404": {
@@ -360,7 +404,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "model.CollectionResponse": {
+        "model.CollectionInfoResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -385,13 +429,28 @@ const docTemplate = `{
                 }
             }
         },
+        "model.CollectionPhotosResponse": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.UploadedPhoto"
+                    }
+                },
+                "sort": {
+                    "type": "string",
+                    "example": "uploaded_new"
+                }
+            }
+        },
         "model.CollectionsListResponse": {
             "type": "object",
             "properties": {
                 "collections": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.CollectionResponse"
+                        "$ref": "#/definitions/model.CollectionInfoResponse"
                     }
                 }
             }
@@ -510,7 +569,18 @@ const docTemplate = `{
                 }
             }
         },
-        "model.UploadFile": {
+        "model.UploadFilesResponse": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.UploadedFile"
+                    }
+                }
+            }
+        },
+        "model.UploadedFile": {
             "type": "object",
             "properties": {
                 "collection_id": {
@@ -546,14 +616,35 @@ const docTemplate = `{
                 }
             }
         },
-        "model.UploadFilesResponse": {
+        "model.UploadedPhoto": {
             "type": "object",
             "properties": {
-                "files": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.UploadFile"
-                    }
+                "collection_id": {
+                    "type": "string"
+                },
+                "file_ext": {
+                    "type": "string"
+                },
+                "file_name": {
+                    "type": "string"
+                },
+                "hash_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "original_url": {
+                    "type": "string"
+                },
+                "thumbnail_url": {
+                    "type": "string"
+                },
+                "uploaded_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         }

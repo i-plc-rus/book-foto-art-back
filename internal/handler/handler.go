@@ -212,17 +212,17 @@ func (h *Handler) CreateCollection(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"id": col.ID})
 }
 
-// GetCollection godoc
-// @Summary      Получить коллекцию
-// @Description  Возвращает коллекцию по ID
+// GetCollectionInfo godoc
+// @Summary      Получить информацию о коллекции
+// @Description  Возвращает информацию о коллекции по ID
 // @Tags         Collection
 // @Accept       json
 // @Produce      json
 // @Param        id path string true "ID коллекции"
-// @Success      200 {object} model.CollectionResponse
+// @Success      200 {object} model.CollectionInfoResponse
 // @Failure      404 {object} model.ErrorMessage
 // @Router       /collection/{id} [get]
-func (h *Handler) GetCollection(c *gin.Context) {
+func (h *Handler) GetCollectionInfo(c *gin.Context) {
 	// Получаем user_id из контекста
 	userIDStr := c.GetString("user_id")
 	userID, err := uuid.Parse(userIDStr)
@@ -241,7 +241,7 @@ func (h *Handler) GetCollection(c *gin.Context) {
 		return
 	}
 
-	collection, err := h.collectionService.GetCollectionByID(c.Request.Context(), userID, collectionID)
+	collection, err := h.collectionService.GetCollectionInfo(c.Request.Context(), userID, collectionID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
@@ -252,6 +252,53 @@ func (h *Handler) GetCollection(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, collection)
+}
+
+// GetCollectionPhotos godoc
+// @Summary      Получить фотографии коллекции
+// @Description  Возвращает список фотографий в коллекции пользователя с возможностью сортировки.
+// @Tags         Collection
+// @Accept       json
+// @Produce      json
+// @Param        id   path   string true  "ID коллекции"
+// @Param        sort query  string false "Сортировка. Возможные значения: uploaded_new (по дате загрузки, новые сверху), uploaded_old (по дате загрузки, старые сверху), name_az (по имени файла, A-Z), name_za (по имени файла, Z-A), random (случайный порядок). По умолчанию: uploaded_new"
+// @Success      200  {object} model.CollectionPhotosResponse
+// @Failure      404  {object} model.ErrorMessage
+// @Router       /collection/{id}/photos [get]
+func (h *Handler) GetCollectionPhotos(c *gin.Context) {
+	// Получаем user_id из контекста
+	userIDStr := c.GetString("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// Получаем параметры из URL
+	collectionIDStr := c.Param("id")
+	collectionID, err := uuid.Parse(collectionIDStr)
+	if err != nil {
+		log.Printf("Invalid collection ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
+		return
+	}
+	sortParam := c.Query("sort")
+
+	photos, sort, err := h.collectionService.GetCollectionPhotos(c.Request.Context(), userID, collectionID, sortParam)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get collection photos"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"files": photos,
+		"sort":  sort,
+	})
 }
 
 // ListCollections godoc

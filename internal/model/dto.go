@@ -49,7 +49,7 @@ type CreateCollectionResponse struct {
 	ID string `json:"id" example:"06301788-e325-488f-94b5-1711e211b82a"`
 }
 
-type CollectionResponse struct {
+type CollectionInfoResponse struct {
 	ID        string `json:"id" example:"06301788-e325-488f-94b5-1711e211b82a"`
 	UserID    string `json:"user_id" example:"06301788-e325-488f-94b5-1711e211b82a"`
 	Name      string `json:"name" example:"My Collection"`
@@ -58,7 +58,7 @@ type CollectionResponse struct {
 }
 
 type CollectionsListResponse struct {
-	Collections []CollectionResponse `json:"collections"`
+	Collections []CollectionInfoResponse `json:"collections"`
 }
 
 type DeleteCollectionResponse struct {
@@ -70,7 +70,7 @@ type UploadFilesRequest struct {
 	Files        []*multipart.FileHeader `form:"files"`
 }
 
-type UploadFile struct {
+type UploadedFile struct {
 	ID           uuid.UUID `json:"id" example:"06301788-e325-488f-94b5-1711e211b82a"`
 	CollectionID uuid.UUID `json:"collection_id" example:"06301788-e325-488f-94b5-1711e211b82a"`
 	UserID       uuid.UUID `json:"user_id" example:"06301788-e325-488f-94b5-1711e211b82a"`
@@ -83,5 +83,10 @@ type UploadFile struct {
 }
 
 type UploadFilesResponse struct {
-	UploadFiles []UploadFile `json:"files"`
+	UploadFiles []UploadedFile `json:"files"`
+}
+
+type CollectionPhotosResponse struct {
+	Photos []UploadedPhoto `json:"files"`
+	Sort   string          `json:"sort" example:"uploaded_new"`
 }

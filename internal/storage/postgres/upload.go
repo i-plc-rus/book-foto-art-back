@@ -28,25 +28,3 @@ func (s *Storage) SaveUpload(ctx context.Context, upload *model.UploadedPhoto) (
 	upload.ID = id
 	return upload, nil
 }
-
-func (s *Storage) GetUploadsByCollection(ctx context.Context, collectionID int64) ([]model.UploadedPhoto, error) {
-	rows, err := s.DB.Query(ctx,
-		`SELECT id, collection_id, original_url, thumbnail_url, file_name, file_ext
-		 FROM uploaded_photos
-		 WHERE collection_id = $1`, collectionID,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var result []model.UploadedPhoto
-	for rows.Next() {
-		var f model.UploadedPhoto
-		if err := rows.Scan(&f.ID, &f.CollectionID, &f.OriginalURL, &f.ThumbnailURL, &f.FileName, &f.FileExt); err != nil {
-			return nil, err
-		}
-		result = append(result, f)
-	}
-	return result, nil
-}

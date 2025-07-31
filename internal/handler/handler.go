@@ -379,7 +379,7 @@ func (h *Handler) DeleteCollection(c *gin.Context) {
 // @Accept       multipart/form-data
 // @Produce      json
 // @Param        collection_id formData string true "ID коллекции"
-// @Param        file formData file true "Файл для загрузки"
+// @Param        files formData file true "Файлы для загрузки"
 // @Success      200 {object} model.UploadFilesResponse
 // @Failure      400 {object} model.ErrorMessage
 // @Router       /upload/files [post]

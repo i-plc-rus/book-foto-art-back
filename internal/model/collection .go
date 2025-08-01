@@ -7,9 +7,11 @@ import (
 )
 
 type Collection struct {
-	ID        uuid.UUID `json:"id"`
-	UserID    uuid.UUID `json:"user_id"`
-	Name      string    `json:"name"`
-	Date      time.Time `json:"date"`
-	CreatedAt time.Time `json:"created_at"`
+	ID                uuid.UUID `json:"id"`
+	UserID            uuid.UUID `json:"user_id"`
+	Name              string    `json:"name"`
+	Date              time.Time `json:"date"`
+	CreatedAt         time.Time `json:"created_at"`
+	CoverURL          string    `json:"cover_url"`
+	CoverThumbnailURL string    `json:"cover_thumbnail_url"`
 }

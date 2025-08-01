@@ -14,6 +14,9 @@ FROM gcr.io/distroless/static:nonroot
 WORKDIR /app
 COPY --from=builder /app/app .
 
+# Создаем директорию для static файлов
+RUN mkdir -p /static
+
 # /uploads будет монтироваться volume, доступ к нему даст хост
 VOLUME ["/uploads"]
 

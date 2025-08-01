@@ -16,10 +16,10 @@ type CollectionStorage struct {
 
 func (s *Storage) CreateCollection(ctx context.Context, col model.Collection) (*model.Collection, error) {
 	row := s.DB.QueryRow(ctx,
-		`INSERT INTO collections (name, date, user_id)
-		 VALUES ($1, $2, $3)
+		`INSERT INTO collections (name, date, user_id, cover_url, cover_thumbnail_url)
+		 VALUES ($1, $2, $3, $4, $5)
 		 RETURNING id`,
-		col.Name, col.Date, col.UserID,
+		col.Name, col.Date, col.UserID, col.CoverURL, col.CoverThumbnailURL,
 	)
 	var id uuid.UUID
 	if err := row.Scan(&id); err != nil {
@@ -31,12 +31,12 @@ func (s *Storage) CreateCollection(ctx context.Context, col model.Collection) (*
 
 func (s *Storage) GetCollectionInfo(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) (*model.Collection, error) {
 	row := s.DB.QueryRow(ctx,
-		`SELECT id, user_id, name, date, created_at
+		`SELECT id, user_id, name, date, created_at, cover_url, cover_thumbnail_url
 		 FROM collections
 		 WHERE user_id = $1 AND id = $2`, userID, collectionID,
 	)
 	var col model.Collection
-	if err := row.Scan(&col.ID, &col.UserID, &col.Name, &col.Date, &col.CreatedAt); err != nil {
+	if err := row.Scan(&col.ID, &col.UserID, &col.Name, &col.Date, &col.CreatedAt, &col.CoverURL, &col.CoverThumbnailURL); err != nil {
 		return nil, err
 	}
 	return &col, nil
@@ -44,7 +44,7 @@ func (s *Storage) GetCollectionInfo(ctx context.Context, userID uuid.UUID, colle
 
 func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID) ([]model.Collection, error) {
 	rows, err := s.DB.Query(ctx,
-		`SELECT id, name, date, created_at
+		`SELECT id, name, date, created_at, cover_url, cover_thumbnail_url
 		  FROM collections
 		  WHERE user_id = $1
 		  ORDER BY date DESC`, userID)
@@ -56,7 +56,7 @@ func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID) ([]model
 	var collections []model.Collection
 	for rows.Next() {
 		var c model.Collection
-		err := rows.Scan(&c.ID, &c.Name, &c.Date, &c.CreatedAt)
+		err := rows.Scan(&c.ID, &c.Name, &c.Date, &c.CreatedAt, &c.CoverURL, &c.CoverThumbnailURL)
 		if err != nil {
 			return nil, err
 		}
@@ -77,6 +77,20 @@ func (s *Storage) DeleteCollection(ctx context.Context, userID uuid.UUID, collec
 	}
 	return nil
 }
+
+// func (s *Storage) UpdateCollectionCover(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, coverURL string, coverThumbnailURL string) error {
+// 	res, err := s.DB.Exec(ctx,
+// 		"UPDATE collections SET default_cover_url = $1, default_cover_thumbnail_url = $2 WHERE user_id = $3 AND id = $4",
+// 		coverURL, coverThumbnailURL, userID, collectionID)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	rowsAffected := res.RowsAffected()
+// 	if rowsAffected == 0 {
+// 		return sql.ErrNoRows
+// 	}
+// 	return nil
+// }
 
 func (s *Storage) GetCollectionPhotos(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, sort shared.SortOption) (
 	[]model.UploadedPhoto, error) {

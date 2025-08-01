@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	// "github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
@@ -24,10 +25,10 @@ import (
 // @schemes https
 func main() {
 
-	// // Загрузка переменных окружения (local)
-	// if err := godotenv.Load(".env.local"); err != nil {
-	// 	log.Println("Error loading .env.local file")
-	// }
+	// Загрузка переменных окружения (local)
+	if err := godotenv.Load(".env.local"); err != nil {
+		log.Println("Error loading .env.local file")
+	}
 
 	// БД
 	db := postgres.InitDB()
@@ -93,6 +94,7 @@ func main() {
 		collection.GET("/:id", h.GetCollectionInfo)
 		collection.DELETE("/:id", h.DeleteCollection)
 		collection.GET("/:id/photos", h.GetCollectionPhotos)
+		// collection.PUT("/:id/cover", h.UpdateCollectionCover)
 	}
 
 	// Загрузка файлов
@@ -101,6 +103,9 @@ func main() {
 		upload.Use(h.AuthMiddleware())
 		upload.POST("/files", h.UploadFiles)
 	}
+
+	// Статические файлы
+	r.Static("/static", "./static")
 
 	// Swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

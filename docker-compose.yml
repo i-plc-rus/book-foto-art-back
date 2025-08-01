@@ -8,6 +8,7 @@ services:
     restart: unless-stopped
     volumes:
       - /uploads:/uploads
+      - /static:/static
     expose:
       - "8080"
     depends_on:
@@ -19,6 +20,8 @@ services:
       - DB_PASSWORD=apppass
       - DB_NAME=appdb
       - JWT_SECRET=supersecret123
+      - DEFAULT_COLLECTION_COVER_URL=/static/default_collection_cover.jpg
+      - DEFAULT_COLLECTION_COVER_THUMB_URL=/static/default_collection_cover_thumb.jpg
     networks:
       - app-net
 

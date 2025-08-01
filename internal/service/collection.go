@@ -6,6 +6,7 @@ import (
 	"book-foto-art-back/internal/storage/postgres"
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -21,10 +22,15 @@ func NewCollectionService(s *postgres.Storage) *CollectionService {
 
 func (s *CollectionService) CreateCollection(ctx context.Context, userID uuid.UUID, name string, date time.Time) (
 	*model.Collection, error) {
+	defaultCoverURL := os.Getenv("DEFAULT_COLLECTION_COVER_URL")
+	defaultCoverThumbnailURL := os.Getenv("DEFAULT_COLLECTION_COVER_THUMB_URL")
+
 	collection := model.Collection{
-		UserID: userID,
-		Name:   name,
-		Date:   date,
+		UserID:            userID,
+		Name:              name,
+		Date:              date,
+		CoverURL:          defaultCoverURL,
+		CoverThumbnailURL: defaultCoverThumbnailURL,
 	}
 	return s.Storage.CreateCollection(ctx, collection)
 }
@@ -58,3 +64,7 @@ func (s *CollectionService) GetCollectionPhotos(ctx context.Context, userID uuid
 	}
 	return photos, string(sort), err
 }
+
+// func (s *CollectionService) UpdateCollectionCover(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, coverURL string, coverThumbnailURL string) error {
+// 	return s.Storage.UpdateCollectionCover(ctx, userID, collectionID, coverURL, coverThumbnailURL)
+// }

@@ -22,5 +22,5 @@ COPY static/ /static/
 # /uploads будет монтироваться volume, доступ к нему даст хост
 VOLUME ["/uploads"]
 
-USER nonroot
+USER root
 ENTRYPOINT ["/app/app"]

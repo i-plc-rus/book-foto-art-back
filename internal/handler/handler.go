@@ -51,38 +51,6 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// Refresh godoc
-// @Summary      Обновление токена
-// @Description  Обновляет access и refresh токены
-// @Tags         Auth
-// @Accept       json
-// @Produce      json
-// @Param        input body model.RefreshRequest true "Refresh токен"
-// @Success      200 {object} model.RefreshResponse
-// @Failure      401 {object} model.ErrorMessage
-// @Router       /auth/refresh [post]
-func (h *Handler) Refresh(c *gin.Context) {
-	var input struct {
-		RefreshToken string `json:"refresh_token"`
-	}
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-		return
-	}
-	user, err := h.userService.Storage.GetUserByRefresh(c.Request.Context(), input.RefreshToken)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
-		return
-	}
-	access, refresh, err := service.GenerateTokens(user.ID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Token error"})
-		return
-	}
-	_ = h.userService.Storage.UpdateRefreshToken(c.Request.Context(), user.ID, refresh)
-	c.JSON(http.StatusOK, gin.H{"access_token": access, "refresh_token": refresh})
-}
-
 // Register godoc
 // @Summary      Регистрация пользователя
 // @Description  Создаёт нового пользователя
@@ -104,14 +72,15 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	token, err := h.userService.Register(c.Request.Context(), input.UserName, input.Email, input.Password)
+	// Регистрируем пользователя
+	access, refresh, err := h.userService.Register(c.Request.Context(), input.UserName, input.Email, input.Password)
 	if err != nil {
 		log.Printf("failed to register user: %v", err)
 		c.JSON(http.StatusConflict, gin.H{"error": "User already exists"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"token": token})
+	c.JSON(http.StatusCreated, gin.H{"access_token": access, "refresh_token": refresh})
 }
 
 // Login godoc
@@ -133,12 +102,43 @@ func (h *Handler) Login(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
-	token, err := h.userService.Login(c.Request.Context(), input.Email, input.Password)
+	access, refresh, err := h.userService.Login(c.Request.Context(), input.Email, input.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"token": token})
+	c.JSON(http.StatusOK, gin.H{"access_token": access, "refresh_token": refresh})
+}
+
+// Refresh godoc
+// @Summary      Обновление токена
+// @Description  Обновляет access и refresh токены
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        input body model.RefreshRequest true "Refresh токен"
+// @Success      200 {object} model.RefreshResponse
+// @Failure      401 {object} model.ErrorMessage
+// @Router       /auth/refresh [post]
+func (h *Handler) Refresh(c *gin.Context) {
+	var input struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	access, err := h.userService.Refresh(c.Request.Context(), input.RefreshToken)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid refresh token"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Token error"})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"access_token": access})
 }
 
 // GetProfile godoc
@@ -159,7 +159,7 @@ func (h *Handler) GetProfile(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
-	user, err := h.userService.GetProfile(context.Background(), userID)
+	user, err := h.userService.GetUserByID(context.Background(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "User not found"})
 		return

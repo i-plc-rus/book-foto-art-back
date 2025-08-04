@@ -73,6 +73,7 @@ func main() {
 	{
 		auth.POST("/register", h.Register)
 		auth.POST("/login", h.Login)
+		auth.POST("/refresh", h.Refresh)
 		//auth.GET("/yandex/login", h.YandexLogin)
 		//auth.GET("/yandex/callback", h.YandexCallback)
 	}

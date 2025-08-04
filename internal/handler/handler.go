@@ -52,14 +52,15 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 }
 
 // Register godoc
-// @Summary      Регистрация пользователя
-// @Description  Создаёт нового пользователя
+// @Summary      Регистрация нового пользователя
+// @Description  Создаёт нового пользователя в системе. Проверяет уникальность email и username. При успешной регистрации возвращает access и refresh токены для аутентификации.
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
-// @Param        input body model.RegisterRequest true "Данные для регистрации"
-// @Success      201 {object} model.TokenResponse
-// @Failure      400 {object} model.ErrorMessage
+// @Param        input body model.RegisterRequest true "Данные для регистрации пользователя"
+// @Success      201 {object} model.TokenResponse "Пользователь успешно зарегистрирован"
+// @Failure      400 {object} model.ErrorMessage "Неверный формат данных"
+// @Failure      409 {object} model.ErrorMessage "Пользователь с таким email или username уже существует"
 // @Router       /auth/register [post]
 func (h *Handler) Register(c *gin.Context) {
 	var input struct {
@@ -85,13 +86,14 @@ func (h *Handler) Register(c *gin.Context) {
 
 // Login godoc
 // @Summary      Аутентификация пользователя
-// @Description  Аутентифицирует пользователя
+// @Description  Аутентифицирует пользователя по email и паролю. При успешной аутентификации возвращает access и refresh токены для дальнейшего использования API.
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
-// @Param        input body model.LoginRequest true "Данные для входа"
-// @Success      200 {object} model.TokenResponse
-// @Failure      401 {object} model.ErrorMessage
+// @Param        input body model.LoginRequest true "Данные для входа в систему"
+// @Success      200 {object} model.TokenResponse "Успешная аутентификация"
+// @Failure      400 {object} model.ErrorMessage "Неверный формат данных"
+// @Failure      401 {object} model.ErrorMessage "Неверные учетные данные"
 // @Router       /auth/login [post]
 func (h *Handler) Login(c *gin.Context) {
 	var input struct {
@@ -111,14 +113,16 @@ func (h *Handler) Login(c *gin.Context) {
 }
 
 // Refresh godoc
-// @Summary      Обновление токена
-// @Description  Обновляет access и refresh токены
+// @Summary      Обновление токена доступа
+// @Description  Обновляет access токен используя refresh токен. Refresh токен должен быть действительным и не истекшим. Возвращает новый access токен.
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
-// @Param        input body model.RefreshRequest true "Refresh токен"
-// @Success      200 {object} model.RefreshResponse
-// @Failure      401 {object} model.ErrorMessage
+// @Param        input body model.RefreshRequest true "Refresh токен для обновления"
+// @Success      200 {object} model.RefreshResponse "Токен успешно обновлен"
+// @Failure      400 {object} model.ErrorMessage "Неверный формат данных"
+// @Failure      401 {object} model.ErrorMessage "Недействительный или истекший refresh токен"
+// @Failure      500 {object} model.ErrorMessage "Внутренняя ошибка сервера"
 // @Router       /auth/refresh [post]
 func (h *Handler) Refresh(c *gin.Context) {
 	var input struct {

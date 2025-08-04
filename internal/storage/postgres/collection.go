@@ -78,19 +78,37 @@ func (s *Storage) DeleteCollection(ctx context.Context, userID uuid.UUID, collec
 	return nil
 }
 
-// func (s *Storage) UpdateCollectionCover(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, coverURL string, coverThumbnailURL string) error {
-// 	res, err := s.DB.Exec(ctx,
-// 		"UPDATE collections SET default_cover_url = $1, default_cover_thumbnail_url = $2 WHERE user_id = $3 AND id = $4",
-// 		coverURL, coverThumbnailURL, userID, collectionID)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	rowsAffected := res.RowsAffected()
-// 	if rowsAffected == 0 {
-// 		return sql.ErrNoRows
-// 	}
-// 	return nil
-// }
+func (s *Storage) UpdateCollectionCover(
+	ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, uploadedPhotoID uuid.UUID) error {
+
+	// Сначала проверяем, что uploaded_photo принадлежит коллекции и пользователю
+	var photo model.UploadedPhoto
+	err := s.DB.QueryRow(ctx,
+		`SELECT original_url, thumbnail_url
+		 FROM uploaded_photos
+		 WHERE user_id = $1 AND collection_id = $2 AND id = $3`,
+		userID, collectionID, uploadedPhotoID,
+	).Scan(&photo.OriginalURL, &photo.ThumbnailURL)
+	if err != nil {
+		return err
+	}
+
+	// Обновляем cover_url и cover_thumbnail_url коллекции
+	res, err := s.DB.Exec(ctx,
+		`UPDATE collections
+		 SET cover_url = $1, cover_thumbnail_url = $2
+		 WHERE user_id = $3 AND id = $4`,
+		photo.OriginalURL, photo.ThumbnailURL, userID, collectionID)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected := res.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
 
 func (s *Storage) GetCollectionPhotos(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, sort shared.SortOption) (
 	[]model.UploadedPhoto, error) {

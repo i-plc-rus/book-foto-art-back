@@ -6,7 +6,6 @@ services:
     restart: unless-stopped
     volumes:
       - /uploads:/uploads
-      - /static:/static
     expose:
       - "8080"
     depends_on:

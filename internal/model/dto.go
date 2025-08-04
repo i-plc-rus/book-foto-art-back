@@ -50,18 +50,20 @@ type CreateCollectionResponse struct {
 }
 
 type CollectionInfoResponse struct {
-	ID        string `json:"id" example:"06301788-e325-488f-94b5-1711e211b82a"`
-	UserID    string `json:"user_id" example:"06301788-e325-488f-94b5-1711e211b82a"`
-	Name      string `json:"name" example:"My Collection"`
-	Date      string `json:"date" example:"2025-07-20T00:00:00Z"`
-	CreatedAt string `json:"created_at" example:"2025-0715:12:00Z"`
+	ID                string `json:"id" example:"06301788-e325-488f-94b5-1711e211b82a"`
+	UserID            string `json:"user_id" example:"06301788-e325-488f-94b5-1711e211b82a"`
+	Name              string `json:"name" example:"My Collection"`
+	Date              string `json:"date" example:"2025-07-20T00:00:00Z"`
+	CreatedAt         string `json:"created_at" example:"2025-0715:12:00Z"`
+	CoverURL          string `json:"cover_url"`
+	CoverThumbnailURL string `json:"cover_thumbnail_url"`
 }
 
 type CollectionsListResponse struct {
 	Collections []CollectionInfoResponse `json:"collections"`
 }
 
-type DeleteCollectionResponse struct {
+type BooleanResponse struct {
 	Success bool `json:"success" example:"true"`
 }
 
@@ -89,4 +91,8 @@ type UploadFilesResponse struct {
 type CollectionPhotosResponse struct {
 	Photos []UploadedPhoto `json:"files"`
 	Sort   string          `json:"sort" example:"uploaded_new"`
+}
+
+type UpdateCollectionCoverRequest struct {
+	PhotoID string `json:"photo_id" example:"06301788-e325-488f-94b5-1711e211b82a"`
 }

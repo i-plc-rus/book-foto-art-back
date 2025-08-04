@@ -7,29 +7,41 @@ import (
 	"github.com/google/uuid"
 )
 
+// ErrorMessage представляет сообщение об ошибке
+// @Description Структура для сообщений об ошибках API
 type ErrorMessage struct {
 	Error string `json:"error" example:"Invalid credentials"`
 }
 
+// RefreshRequest содержит refresh токен для обновления access токена
+// @Description Структура запроса для обновления токена доступа
 type RefreshRequest struct {
-	RefreshToken string `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	RefreshToken string `json:"refresh_token" binding:"required" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c" validate:"required"`
 }
 
+// RefreshResponse представляет ответ с обновленным access токеном
+// @Description Структура ответа при успешном обновлении токена
 type RefreshResponse struct {
-	AccessToken  string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
-	RefreshToken string `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	AccessToken string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
 }
 
+// RegisterRequest содержит данные для регистрации нового пользователя
+// @Description Структура запроса для регистрации пользователя в системе
 type RegisterRequest struct {
 	UserName string `json:"username" example:"user1"`
 	Email    string `json:"email" example:"user1@example.com"`
 	Password string `json:"password" example:"password123"`
 }
 
+// TokenResponse представляет ответ с токенами аутентификации
+// @Description Структура ответа с access и refresh токенами
 type TokenResponse struct {
-	Token string `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	AccessToken  string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
+	RefreshToken string `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
 }
 
+// LoginRequest содержит данные для аутентификации пользователя
+// @Description Структура запроса для входа в систему
 type LoginRequest struct {
 	Email    string `json:"email" example:"user1@example.com"`
 	Password string `json:"password" example:"password123"`

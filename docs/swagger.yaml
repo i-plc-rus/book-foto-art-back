@@ -61,12 +61,14 @@ definitions:
         type: string
     type: object
   model.ErrorMessage:
+    description: Структура для сообщений об ошибках API
     properties:
       error:
         example: Invalid credentials
         type: string
     type: object
   model.LoginRequest:
+    description: Структура запроса для входа в систему
     properties:
       email:
         example: user1@example.com
@@ -85,21 +87,23 @@ definitions:
         type: string
     type: object
   model.RefreshRequest:
+    description: Структура запроса для обновления токена доступа
     properties:
       refresh_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         type: string
+    required:
+    - refresh_token
     type: object
   model.RefreshResponse:
+    description: Структура ответа при успешном обновлении токена
     properties:
       access_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        type: string
-      refresh_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         type: string
     type: object
   model.RegisterRequest:
+    description: Структура запроса для регистрации пользователя в системе
     properties:
       email:
         example: user1@example.com
@@ -112,9 +116,13 @@ definitions:
         type: string
     type: object
   model.TokenResponse:
+    description: Структура ответа с access и refresh токенами
     properties:
-      token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        type: string
+      refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
         type: string
     type: object
   model.UpdateCollectionCoverRequest:
@@ -187,9 +195,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Аутентифицирует пользователя
+      description: Аутентифицирует пользователя по email и паролю. При успешной аутентификации
+        возвращает access и refresh токены для дальнейшего использования API.
       parameters:
-      - description: Данные для входа
+      - description: Данные для входа в систему
         in: body
         name: input
         required: true
@@ -199,11 +208,15 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Успешная аутентификация
           schema:
             $ref: '#/definitions/model.TokenResponse'
+        "400":
+          description: Неверный формат данных
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
         "401":
-          description: Unauthorized
+          description: Неверные учетные данные
           schema:
             $ref: '#/definitions/model.ErrorMessage'
       summary: Аутентификация пользователя
@@ -213,9 +226,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Обновляет access и refresh токены
+      description: Обновляет access токен используя refresh токен. Refresh токен должен
+        быть действительным и не истекшим. Возвращает новый access токен.
       parameters:
-      - description: Refresh токен
+      - description: Refresh токен для обновления
         in: body
         name: input
         required: true
@@ -225,23 +239,33 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Токен успешно обновлен
           schema:
             $ref: '#/definitions/model.RefreshResponse'
-        "401":
-          description: Unauthorized
+        "400":
+          description: Неверный формат данных
           schema:
             $ref: '#/definitions/model.ErrorMessage'
-      summary: Обновление токена
+        "401":
+          description: Недействительный или истекший refresh токен
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Обновление токена доступа
       tags:
       - Auth
   /auth/register:
     post:
       consumes:
       - application/json
-      description: Создаёт нового пользователя
+      description: Создаёт нового пользователя в системе. Проверяет уникальность email
+        и username. При успешной регистрации возвращает access и refresh токены для
+        аутентификации.
       parameters:
-      - description: Данные для регистрации
+      - description: Данные для регистрации пользователя
         in: body
         name: input
         required: true
@@ -251,14 +275,18 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Пользователь успешно зарегистрирован
           schema:
             $ref: '#/definitions/model.TokenResponse'
         "400":
-          description: Bad Request
+          description: Неверный формат данных
           schema:
             $ref: '#/definitions/model.ErrorMessage'
-      summary: Регистрация пользователя
+        "409":
+          description: Пользователь с таким email или username уже существует
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Регистрация нового пользователя
       tags:
       - Auth
   /collection/{id}:

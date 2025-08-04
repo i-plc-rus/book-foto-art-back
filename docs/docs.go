@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/auth/login": {
             "post": {
-                "description": "Аутентифицирует пользователя",
+                "description": "Аутентифицирует пользователя по email и паролю. При успешной аутентификации возвращает access и refresh токены для дальнейшего использования API.",
                 "consumes": [
                     "application/json"
                 ],
@@ -30,7 +30,7 @@ const docTemplate = `{
                 "summary": "Аутентификация пользователя",
                 "parameters": [
                     {
-                        "description": "Данные для входа",
+                        "description": "Данные для входа в систему",
                         "name": "input",
                         "in": "body",
                         "required": true,
@@ -41,13 +41,19 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Успешная аутентификация",
                         "schema": {
                             "$ref": "#/definitions/model.TokenResponse"
                         }
                     },
+                    "400": {
+                        "description": "Неверный формат данных",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Неверные учетные данные",
                         "schema": {
                             "$ref": "#/definitions/model.ErrorMessage"
                         }
@@ -57,7 +63,7 @@ const docTemplate = `{
         },
         "/auth/refresh": {
             "post": {
-                "description": "Обновляет access и refresh токены",
+                "description": "Обновляет access токен используя refresh токен. Refresh токен должен быть действительным и не истекшим. Возвращает новый access токен.",
                 "consumes": [
                     "application/json"
                 ],
@@ -67,10 +73,10 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Обновление токена",
+                "summary": "Обновление токена доступа",
                 "parameters": [
                     {
-                        "description": "Refresh токен",
+                        "description": "Refresh токен для обновления",
                         "name": "input",
                         "in": "body",
                         "required": true,
@@ -81,13 +87,25 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Токен успешно обновлен",
                         "schema": {
                             "$ref": "#/definitions/model.RefreshResponse"
                         }
                     },
+                    "400": {
+                        "description": "Неверный формат данных",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Недействительный или истекший refresh токен",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/model.ErrorMessage"
                         }
@@ -97,7 +115,7 @@ const docTemplate = `{
         },
         "/auth/register": {
             "post": {
-                "description": "Создаёт нового пользователя",
+                "description": "Создаёт нового пользователя в системе. Проверяет уникальность email и username. При успешной регистрации возвращает access и refresh токены для аутентификации.",
                 "consumes": [
                     "application/json"
                 ],
@@ -107,10 +125,10 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "Регистрация пользователя",
+                "summary": "Регистрация нового пользователя",
                 "parameters": [
                     {
-                        "description": "Данные для регистрации",
+                        "description": "Данные для регистрации пользователя",
                         "name": "input",
                         "in": "body",
                         "required": true,
@@ -121,13 +139,19 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Пользователь успешно зарегистрирован",
                         "schema": {
                             "$ref": "#/definitions/model.TokenResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Неверный формат данных",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "409": {
+                        "description": "Пользователь с таким email или username уже существует",
                         "schema": {
                             "$ref": "#/definitions/model.ErrorMessage"
                         }
@@ -540,6 +564,7 @@ const docTemplate = `{
             }
         },
         "model.ErrorMessage": {
+            "description": "Структура для сообщений об ошибках API",
             "type": "object",
             "properties": {
                 "error": {
@@ -549,6 +574,7 @@ const docTemplate = `{
             }
         },
         "model.LoginRequest": {
+            "description": "Структура запроса для входа в систему",
             "type": "object",
             "properties": {
                 "email": {
@@ -575,28 +601,30 @@ const docTemplate = `{
             }
         },
         "model.RefreshRequest": {
+            "description": "Структура запроса для обновления токена доступа",
             "type": "object",
+            "required": [
+                "refresh_token"
+            ],
             "properties": {
                 "refresh_token": {
                     "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
                 }
             }
         },
         "model.RefreshResponse": {
+            "description": "Структура ответа при успешном обновлении токена",
             "type": "object",
             "properties": {
                 "access_token": {
                     "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                },
-                "refresh_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
                 }
             }
         },
         "model.RegisterRequest": {
+            "description": "Структура запроса для регистрации пользователя в системе",
             "type": "object",
             "properties": {
                 "email": {
@@ -614,11 +642,16 @@ const docTemplate = `{
             }
         },
         "model.TokenResponse": {
+            "description": "Структура ответа с access и refresh токенами",
             "type": "object",
             "properties": {
-                "token": {
+                "access_token": {
                     "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                },
+                "refresh_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
                 }
             }
         },

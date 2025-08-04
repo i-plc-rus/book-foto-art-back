@@ -65,6 +65,7 @@ func (s *CollectionService) GetCollectionPhotos(ctx context.Context, userID uuid
 	return photos, string(sort), err
 }
 
-// func (s *CollectionService) UpdateCollectionCover(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, coverURL string, coverThumbnailURL string) error {
-// 	return s.Storage.UpdateCollectionCover(ctx, userID, collectionID, coverURL, coverThumbnailURL)
-// }
+func (s *CollectionService) UpdateCollectionCover(
+	ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, uploadedPhotoID uuid.UUID) error {
+	return s.Storage.UpdateCollectionCover(ctx, userID, collectionID, uploadedPhotoID)
+}

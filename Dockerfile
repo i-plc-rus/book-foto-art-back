@@ -14,10 +14,7 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /app
 COPY --from=builder /app/app .
-
-# Создаем директорию для static файлов и копируем статические файлы
-RUN mkdir -p /static
-COPY --from=builder /app/static/ /static/
+COPY --from=builder /app/static /static
 
 # /uploads будет монтироваться volume, доступ к нему даст хост
 VOLUME ["/uploads"]

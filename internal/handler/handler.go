@@ -337,7 +337,7 @@ func (h *Handler) ListCollections(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        id path string true "ID коллекции"
-// @Success      200 {object} model.DeleteCollectionResponse
+// @Success      200 {object} model.BooleanResponse
 // @Failure      404 {object} model.ErrorMessage
 // @Failure      400 {object} model.ErrorMessage
 // @Router       /collection/{id} [delete]
@@ -436,47 +436,51 @@ func (h *Handler) UploadFiles(c *gin.Context) {
 // @Produce      json
 // @Param        id path string true "ID коллекции"
 // @Param        input body model.UpdateCollectionCoverRequest true "Данные для обновления обложки"
-// @Success      200 {object} model.UpdateCollectionCoverResponse
-// @Failure      400 {object} model.ErrorMessage
+// @Success      200 {object} model.BooleanResponse
 // @Failure      404 {object} model.ErrorMessage
 // @Router       /collection/{id}/cover [put]
-// func (h *Handler) UpdateCollectionCover(c *gin.Context) {
-// 	// Получаем user_id из контекста
-// 	userIDStr := c.GetString("user_id")
-// 	userID, err := uuid.Parse(userIDStr)
-// 	if err != nil {
-// 		log.Printf("Invalid user ID: %v\n", err)
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-// 		return
-// 	}
+func (h *Handler) UpdateCollectionCover(c *gin.Context) {
+	// Получаем user_id из контекста
+	userIDStr := c.GetString("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
 
-// 	// Получаем collection_id из URL
-// 	collectionIDStr := c.Param("id")
-// 	collectionID, err := uuid.Parse(collectionIDStr)
-// 	if err != nil {
-// 		log.Printf("Invalid collection ID: %v\n", err)
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
-// 		return
-// 	}
+	// Получаем collection_id из URL
+	collectionIDStr := c.Param("id")
+	collectionID, err := uuid.Parse(collectionIDStr)
+	if err != nil {
+		log.Printf("Invalid collection ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid collection ID"})
+		return
+	}
 
-// 	var input struct {
-// 		CoverURL          string `json:"cover_url"`
-// 		CoverThumbnailURL string `json:"cover_thumbnail_url"`
-// 	}
-// 	if err := c.ShouldBindJSON(&input); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-// 		return
-// 	}
+	var input struct {
+		UploadedPhotoIDStr string `json:"photo_id"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+	uploadedPhotoID, err := uuid.Parse(input.UploadedPhotoIDStr)
+	if err != nil {
+		log.Printf("Invalid photo ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid photo ID"})
+		return
+	}
 
-// 	err = h.collectionService.UpdateCollectionCover(c.Request.Context(), userID, collectionID, input.CoverURL, input.CoverThumbnailURL)
-// 	if err != nil {
-// 		if errors.Is(err, sql.ErrNoRows) {
-// 			c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
-// 		} else {
-// 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update collection cover"})
-// 		}
-// 		return
-// 	}
+	err = h.collectionService.UpdateCollectionCover(c.Request.Context(), userID, collectionID, uploadedPhotoID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Photo not found in collection"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update collection cover"})
+		}
+		return
+	}
 
-// 	c.JSON(http.StatusOK, gin.H{"success": true})
-// }
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}

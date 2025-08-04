@@ -24,7 +24,7 @@ import (
 // @schemes https
 func main() {
 
-	// Загрузка переменных окружения (local)
+	// // Загрузка переменных окружения (local)
 	// if err := godotenv.Load(".env.local"); err != nil {
 	// 	log.Println("Error loading .env.local file")
 	// }
@@ -93,7 +93,7 @@ func main() {
 		collection.GET("/:id", h.GetCollectionInfo)
 		collection.DELETE("/:id", h.DeleteCollection)
 		collection.GET("/:id/photos", h.GetCollectionPhotos)
-		// collection.PUT("/:id/cover", h.UpdateCollectionCover)
+		collection.PUT("/:id/cover", h.UpdateCollectionCover)
 	}
 
 	// Загрузка файлов
@@ -104,7 +104,7 @@ func main() {
 	}
 
 	// Статические файлы
-	r.Static("/static", "./static")
+	r.Static("/static", "/static")
 
 	// Swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

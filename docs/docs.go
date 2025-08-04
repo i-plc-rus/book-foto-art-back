@@ -266,13 +266,60 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.DeleteCollectionResponse"
+                            "$ref": "#/definitions/model.BooleanResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    }
+                }
+            }
+        },
+        "/collection/{id}/cover": {
+            "put": {
+                "description": "Изменяет обложку коллекции на фотографию из этой коллекции",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Collection"
+                ],
+                "summary": "Обновить обложку коллекции",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID коллекции",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные для обновления обложки",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.UpdateCollectionCoverRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.BooleanResponse"
                         }
                     },
                     "404": {
@@ -404,9 +451,24 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "model.BooleanResponse": {
+            "type": "object",
+            "properties": {
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "model.CollectionInfoResponse": {
             "type": "object",
             "properties": {
+                "cover_thumbnail_url": {
+                    "type": "string"
+                },
+                "cover_url": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2025-0715:12:00Z"
@@ -474,15 +536,6 @@ const docTemplate = `{
                 "id": {
                     "type": "string",
                     "example": "06301788-e325-488f-94b5-1711e211b82a"
-                }
-            }
-        },
-        "model.DeleteCollectionResponse": {
-            "type": "object",
-            "properties": {
-                "success": {
-                    "type": "boolean",
-                    "example": true
                 }
             }
         },
@@ -566,6 +619,15 @@ const docTemplate = `{
                 "token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
+        "model.UpdateCollectionCoverRequest": {
+            "type": "object",
+            "properties": {
+                "photo_id": {
+                    "type": "string",
+                    "example": "06301788-e325-488f-94b5-1711e211b82a"
                 }
             }
         },

@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	accessTokenDuration  = time.Hour * 24
-	refreshTokenDuration = time.Hour * 24 * 7
+	accessTokenDuration  = time.Minute * 1
+	refreshTokenDuration = time.Minute * 2
 )
 
 type UserService struct {

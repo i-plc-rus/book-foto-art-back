@@ -180,6 +180,7 @@ func (h *Handler) ForgotPassword(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        input body model.ResetPasswordRequest true "Новый пароль"
+// @Param        token query string true "Одноразовый токен для сброса пароля"
 // @Success      200 {object} model.BooleanResponse "Пароль успешно сброшен"
 // @Failure      400 {object} model.ErrorMessage "Неверный формат данных"
 // @Failure      500 {object} model.ErrorMessage "Ошибка при сбросе пароля"

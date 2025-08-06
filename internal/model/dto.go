@@ -33,6 +33,14 @@ type RegisterRequest struct {
 	Password string `json:"password" example:"password123"`
 }
 
+type ForgotPasswordRequest struct {
+	Email string `json:"email" example:"user1@example.com"`
+}
+
+type ResetPasswordRequest struct {
+	NewPassword string `json:"new_password" example:"password123"`
+}
+
 // TokenResponse представляет ответ с токенами аутентификации
 // @Description Структура ответа с access и refresh токенами
 type TokenResponse struct {

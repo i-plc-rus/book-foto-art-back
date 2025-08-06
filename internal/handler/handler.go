@@ -145,6 +145,71 @@ func (h *Handler) Refresh(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"access_token": access})
 }
 
+// ForgotPassword godoc
+// @Summary      Запрос на сброс пароля
+// @Description  Отправляет письмо для сброса пароля на указанный email.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        input body model.ForgotPasswordRequest true "Email пользователя"
+// @Success      200 {object} model.BooleanResponse "Письмо успешно отправлено"
+// @Failure      400 {object} model.ErrorMessage "Неверный формат данных"
+// @Failure      500 {object} model.ErrorMessage "Ошибка при отправке письма"
+// @Router       /auth/forgot-password [post]
+func (h *Handler) ForgotPassword(c *gin.Context) {
+	var input struct {
+		Email string `json:"email"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	err := h.userService.ForgotPassword(c.Request.Context(), input.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send reset password email"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+// ResetPassword godoc
+// @Summary      Сброс пароля
+// @Description  Сбрасывает пароль пользователя по одноразовой ссылке.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        input body model.ResetPasswordRequest true "Новый пароль"
+// @Success      200 {object} model.BooleanResponse "Пароль успешно сброшен"
+// @Failure      400 {object} model.ErrorMessage "Неверный формат данных"
+// @Failure      500 {object} model.ErrorMessage "Ошибка при сбросе пароля"
+// @Router       /auth/reset-password [post]
+func (h *Handler) ResetPassword(c *gin.Context) {
+	// Получаем resetToken из URL
+	resetToken := c.Query("token")
+
+	// Получаем новый пароль из тела запроса
+	var input struct {
+		NewPassword string `json:"new_password"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// Сбрасываем пароль
+	err := h.userService.ResetPassword(c.Request.Context(), resetToken, input.NewPassword)
+	if err != nil {
+		if err.Error() == "invalid token" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid reset token"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reset password"})
+		}
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
 // GetProfile godoc
 // @Summary      Получить профиль пользователя
 // @Description  Возвращает данные профиля текущего пользователя

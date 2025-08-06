@@ -4,7 +4,11 @@ import (
 	"book-foto-art-back/internal/model"
 	"book-foto-art-back/internal/storage/postgres"
 	"context"
+	"encoding/base64"
 	"errors"
+	"fmt"
+	"log"
+	"net/smtp"
 	"os"
 	"time"
 
@@ -14,8 +18,9 @@ import (
 )
 
 const (
-	accessTokenDuration  = time.Minute * 1
-	refreshTokenDuration = time.Minute * 2
+	accessTokenDuration  = time.Hour * 24
+	refreshTokenDuration = time.Hour * 24 * 7
+	resetTokenDuration   = time.Hour
 )
 
 type UserService struct {
@@ -95,6 +100,58 @@ func (s *UserService) Refresh(ctx context.Context, refreshToken string) (string,
 	return access, nil
 }
 
+func (s *UserService) ForgotPassword(ctx context.Context, email string) error {
+	user, err := s.Storage.GetUserByEmail(ctx, email)
+	if err != nil {
+		return err
+	}
+	if user.ID != uuid.Nil {
+		resetToken, err := generateJWT(user.ID, time.Hour)
+		if err != nil {
+			return err
+		}
+		err = s.Storage.UpdateResetToken(ctx, user.ID, resetToken)
+		if err != nil {
+			return err
+		}
+		err = s.sendPasswordResetEmail(email, resetToken)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *UserService) ResetPassword(ctx context.Context, resetToken, newPassword string) error {
+	// Проверяем валидность токена
+	userID, err := ParseToken(resetToken)
+	if err != nil {
+		return errors.New("invalid token")
+	}
+	user, err := s.Storage.GetUserByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if user.ResetToken != resetToken {
+		return errors.New("invalid token")
+	}
+	// Устанавливаем новый пароль
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	err = s.Storage.ResetPassword(ctx, userID, string(hash))
+	if err != nil {
+		return err
+	}
+	// Сбрасываем ResetToken
+	err = s.Storage.UpdateResetToken(ctx, userID, "")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *UserService) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	return s.Storage.GetUserByID(ctx, id)
 }
@@ -138,4 +195,64 @@ func ParseToken(tokenStr string) (uuid.UUID, error) {
 		return uuid.Nil, errors.New("invalid user_id format")
 	}
 	return userID, nil
+}
+
+// --- Password reset ---
+func (s *UserService) sendPasswordResetEmail(email, resetToken string) error {
+	// Создаём ссылку для сброса пароля
+	resetLink := fmt.Sprintf("%s/reset-password?token=%s", os.Getenv("FRONTEND_URL"), resetToken)
+
+	// Формируем тему письма в base64
+	encodedSubject := base64.StdEncoding.EncodeToString([]byte("Сброс пароля - BookFotoArt"))
+
+	// Формируем тело письма
+	body := fmt.Sprintf(`
+	Вы запросили сброс пароля для вашего аккаунта в BookFotoArt.
+
+	Для сброса пароля перейдите по ссылке, ссылка действительна в течение %.0f часа(ов):
+	%s
+
+	Если вы не запрашивали сброс пароля, проигнорируйте это письмо.
+
+	С уважением,
+	Команда BookFotoArt
+	Сайт: https://bookfoto.art
+	Email: info@bookfoto.art`, resetTokenDuration.Hours(), resetLink)
+
+	message := fmt.Sprintf("From: %s\r\n"+
+		"To: %s\r\n"+
+		"Subject: =?UTF-8?B?%s?=\r\n"+
+		"Reply-To: info@bookfoto.art\r\n"+
+		"Return-Path: %s\r\n"+
+		"Message-ID: <%s@bookfoto.art>\r\n"+
+		"Date: %s\r\n"+
+		"MIME-Version: 1.0\r\n"+
+		"Content-Type: text/plain; charset=UTF-8\r\n"+
+		"Content-Transfer-Encoding: 8bit\r\n"+
+		"X-Mailer: BookFotoArt/1.0\r\n"+
+		"X-Priority: 3\r\n"+
+		"X-MSMail-Priority: Normal\r\n"+
+		"\r\n"+
+		"%s\r\n", os.Getenv("SMTP_FROM"), email, encodedSubject, os.Getenv("SMTP_FROM"),
+		time.Now().Format("Mon, 02 Jan 2006 15:04:05 -0700"),
+		time.Now().Format("20060102150405"), body)
+
+	// Формируем адрес сервера
+	addr := fmt.Sprintf("%s:%s", os.Getenv("SMTP_HOST"), os.Getenv("SMTP_PORT"))
+
+	// Настраиваем аутентификацию
+	auth := smtp.PlainAuth("", os.Getenv("SMTP_USERNAME"), os.Getenv("SMTP_PASSWORD"), os.Getenv("SMTP_HOST"))
+
+	// Отправляем письмо
+	log.Printf("✅ Try to send reset password email\n")
+	log.Printf("addr: %s\n", addr)
+	log.Printf("from: %s\n", os.Getenv("SMTP_FROM"))
+	log.Printf("email: %s\n", email)
+	log.Printf("message length: %d bytes", len(message))
+	err := smtp.SendMail(addr, auth, os.Getenv("SMTP_FROM"), []string{email}, []byte(message))
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+	log.Printf("✅ Email sent successfully!")
+	return nil
 }

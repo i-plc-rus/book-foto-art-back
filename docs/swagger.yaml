@@ -343,6 +343,11 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/model.ResetPasswordRequest'
+      - description: Одноразовый токен для сброса пароля
+        in: query
+        name: token
+        required: true
+        type: string
       produces:
       - application/json
       responses:

@@ -67,6 +67,12 @@ definitions:
         example: Invalid credentials
         type: string
     type: object
+  model.ForgotPasswordRequest:
+    properties:
+      email:
+        example: user1@example.com
+        type: string
+    type: object
   model.LoginRequest:
     description: Структура запроса для входа в систему
     properties:
@@ -113,6 +119,12 @@ definitions:
         type: string
       username:
         example: user1
+        type: string
+    type: object
+  model.ResetPasswordRequest:
+    properties:
+      new_password:
+        example: password123
         type: string
     type: object
   model.TokenResponse:
@@ -191,6 +203,36 @@ info:
   title: BookFotoArt API
   version: "1.0"
 paths:
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Отправляет письмо для сброса пароля на указанный email.
+      parameters:
+      - description: Email пользователя
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Письмо успешно отправлено
+          schema:
+            $ref: '#/definitions/model.BooleanResponse'
+        "400":
+          description: Неверный формат данных
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+        "500":
+          description: Ошибка при отправке письма
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Запрос на сброс пароля
+      tags:
+      - Auth
   /auth/login:
     post:
       consumes:
@@ -287,6 +329,36 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorMessage'
       summary: Регистрация нового пользователя
+      tags:
+      - Auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Сбрасывает пароль пользователя по одноразовой ссылке.
+      parameters:
+      - description: Новый пароль
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пароль успешно сброшен
+          schema:
+            $ref: '#/definitions/model.BooleanResponse'
+        "400":
+          description: Неверный формат данных
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+        "500":
+          description: Ошибка при сбросе пароля
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Сброс пароля
       tags:
       - Auth
   /collection/{id}:

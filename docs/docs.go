@@ -227,6 +227,13 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/model.ResetPasswordRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Одноразовый токен для сброса пароля",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {

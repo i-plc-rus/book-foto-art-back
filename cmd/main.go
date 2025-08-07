@@ -97,6 +97,7 @@ func main() {
 		collection.DELETE("/:id", h.DeleteCollection)
 		collection.GET("/:id/photos", h.GetCollectionPhotos)
 		collection.PUT("/:id/cover", h.UpdateCollectionCover)
+		collection.DELETE("/photo/:photo_id", h.DeletePhoto)
 	}
 
 	// Загрузка файлов

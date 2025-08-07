@@ -151,3 +151,18 @@ func (s *Storage) GetCollectionPhotos(ctx context.Context, userID uuid.UUID, col
 	}
 	return result, nil
 }
+
+func (s *Storage) DeletePhoto(ctx context.Context, userID uuid.UUID, photoID uuid.UUID) error {
+	res, err := s.DB.Exec(ctx, `
+		DELETE FROM uploaded_photos
+		WHERE user_id = $1 AND id = $2
+	`, userID, photoID)
+	if err != nil {
+		return err
+	}
+	rowsAffected := res.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}

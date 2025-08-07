@@ -514,6 +514,11 @@ paths:
       consumes:
       - application/json
       description: Возвращает список коллекций пользователя
+      parameters:
+      - description: Поиск по названию коллекции
+        in: query
+        name: search
+        type: string
       produces:
       - application/json
       responses:
@@ -523,6 +528,10 @@ paths:
             $ref: '#/definitions/model.CollectionsListResponse'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/model.ErrorMessage'
       summary: Список коллекций

@@ -311,6 +311,14 @@ const docTemplate = `{
                     "Collection"
                 ],
                 "summary": "Список коллекций",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Поиск по названию коллекции",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -320,6 +328,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/model.ErrorMessage"
                         }

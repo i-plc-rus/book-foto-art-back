@@ -40,9 +40,9 @@ func (s *CollectionService) GetCollectionInfo(ctx context.Context, userID uuid.U
 	return s.Storage.GetCollectionInfo(ctx, userID, collectionID)
 }
 
-func (s *CollectionService) GetCollections(ctx context.Context, userID uuid.UUID) (
+func (s *CollectionService) GetCollections(ctx context.Context, userID uuid.UUID, searchParam string) (
 	[]model.Collection, error) {
-	return s.Storage.GetCollections(ctx, userID)
+	return s.Storage.GetCollections(ctx, userID, searchParam)
 }
 
 func (s *CollectionService) DeleteCollection(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) error {

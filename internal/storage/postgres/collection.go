@@ -42,12 +42,21 @@ func (s *Storage) GetCollectionInfo(ctx context.Context, userID uuid.UUID, colle
 	return &col, nil
 }
 
-func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID) ([]model.Collection, error) {
+func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID, searchParam string) ([]model.Collection, error) {
 	rows, err := s.DB.Query(ctx,
-		`SELECT id, name, date, created_at, cover_url, cover_thumbnail_url
-		  FROM collections
-		  WHERE user_id = $1
-		  ORDER BY date DESC`, userID)
+		`
+        SELECT id, name, date, created_at, cover_url, cover_thumbnail_url
+        FROM collections
+        WHERE user_id = $1 AND ($2 = '' OR name ILIKE $3)
+        ORDER BY
+            CASE
+                WHEN $2 = '' THEN 1
+                WHEN name ILIKE $4 THEN 1  -- точное совпадение в начале
+                WHEN name ILIKE $5 THEN 2  -- совпадение в начале
+                ELSE 3                     -- совпадение в любом месте
+            END,
+            date DESC
+		  `, userID, searchParam, "%"+searchParam+"%", searchParam+"%", "%"+searchParam+"%")
 	if err != nil {
 		return nil, err
 	}

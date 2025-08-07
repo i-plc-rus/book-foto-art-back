@@ -372,6 +372,50 @@ func (h *Handler) GetCollectionPhotos(c *gin.Context) {
 	})
 }
 
+// DeletePhoto godoc
+// @Summary      Удалить фотографию
+// @Description  Удаляет фотографию из коллекции по ID
+// @Tags         Collection
+// @Accept       json
+// @Produce      json
+// @Param        photo_id path string true "ID фотографии"
+// @Success      200 {object} model.BooleanResponse
+// @Failure      404 {object} model.ErrorMessage
+// @Failure      400 {object} model.ErrorMessage
+// @Router       /collection/photo/{photo_id} [delete]
+func (h *Handler) DeletePhoto(c *gin.Context) {
+	// Получаем user_id из контекста
+	userIDStr := c.GetString("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		log.Printf("Invalid user ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// Получаем photo_id из URL
+	photoIDStr := c.Param("photo_id")
+	photoID, err := uuid.Parse(photoIDStr)
+	if err != nil {
+		log.Printf("Invalid photo ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid photo ID"})
+		return
+	}
+
+	// Удаляем фотографию из коллекции
+	err = h.collectionService.DeletePhoto(c.Request.Context(), userID, photoID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Photo not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete photo"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
 // ListCollections godoc
 // @Summary      Список коллекций
 // @Description  Возвращает список коллекций пользователя

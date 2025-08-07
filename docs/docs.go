@@ -327,6 +327,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/collection/photo/{photo_id}": {
+            "delete": {
+                "description": "Удаляет фотографию из коллекции по ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Collection"
+                ],
+                "summary": "Удалить фотографию",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID фотографии",
+                        "name": "photo_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.BooleanResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    }
+                }
+            }
+        },
         "/collection/{id}": {
             "get": {
                 "description": "Возвращает информацию о коллекции по ID",

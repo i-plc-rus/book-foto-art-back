@@ -422,8 +422,10 @@ func (h *Handler) DeletePhoto(c *gin.Context) {
 // @Tags         Collection
 // @Accept       json
 // @Produce      json
+// @Param        search query string false "Поиск по названию коллекции"
 // @Success      200 {object} model.CollectionsListResponse
 // @Failure      400 {object} model.ErrorMessage
+// @Failure      500 {object} model.ErrorMessage
 // @Router       /collection/list [get]
 func (h *Handler) ListCollections(c *gin.Context) {
 	// Получаем user_id из контекста
@@ -434,9 +436,11 @@ func (h *Handler) ListCollections(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
+	searchParam := c.Query("search")
 
-	collections, err := h.collectionService.GetCollections(c.Request.Context(), userID)
+	collections, err := h.collectionService.GetCollections(c.Request.Context(), userID, searchParam)
 	if err != nil {
+		log.Printf("Failed to get collections: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get collections"})
 		return
 	}

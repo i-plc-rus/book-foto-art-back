@@ -161,6 +161,20 @@ func (s *Storage) GetCollectionPhotos(ctx context.Context, userID uuid.UUID, col
 	return result, nil
 }
 
+func (s *Storage) GetCollectionPhoto(ctx context.Context, userID uuid.UUID, photoID uuid.UUID) (*model.UploadedPhoto, error) {
+	row := s.DB.QueryRow(ctx, `
+		SELECT id, collection_id, user_id, original_url, thumbnail_url, file_name, file_ext, hash_name, uploaded_at
+		FROM uploaded_photos
+		WHERE user_id = $1 AND id = $2`, userID, photoID)
+
+	var photo model.UploadedPhoto
+	if err := row.Scan(&photo.ID, &photo.CollectionID, &photo.UserID, &photo.OriginalURL, &photo.ThumbnailURL,
+		&photo.FileName, &photo.FileExt, &photo.HashName, &photo.UploadedAt); err != nil {
+		return nil, err
+	}
+	return &photo, nil
+}
+
 func (s *Storage) DeletePhoto(ctx context.Context, userID uuid.UUID, photoID uuid.UUID) error {
 	res, err := s.DB.Exec(ctx, `
 		DELETE FROM uploaded_photos

@@ -535,7 +535,6 @@ func (h *Handler) UploadFiles(c *gin.Context) {
 		return
 	}
 
-	// ✅ Вызов сервиса один раз со всеми файлами
 	results, err := h.uploadService.UploadFiles(c.Request.Context(), userID, collectionID, files)
 	if err != nil {
 		log.Printf("Failed to upload files: %v\n", err)

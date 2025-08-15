@@ -5,11 +5,14 @@ import (
 	"book-foto-art-back/internal/handler"
 	"book-foto-art-back/internal/service"
 	"book-foto-art-back/internal/storage/postgres"
+	"book-foto-art-back/internal/storage/s3"
 	"log"
+	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 
 	// "github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
@@ -24,18 +27,30 @@ import (
 // @schemes https
 func main() {
 
-	// // Загрузка переменных окружения (local)
-	// if err := godotenv.Load(".env.local"); err != nil {
-	// 	log.Println("Error loading .env.local file")
-	// }
+	// Загрузка переменных окружения (local)
+	if err := godotenv.Load(".env.local"); err != nil {
+		log.Println("Error loading .env.local file")
+	}
 
 	// БД
 	db := postgres.InitDB()
 
+	// S3 Storage
+	s3Storage, err := s3.NewS3Storage(s3.S3Config{
+		Region:          os.Getenv("AWS_REGION"),
+		Bucket:          os.Getenv("AWS_BUCKET"),
+		AccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
+		SecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		Endpoint:        os.Getenv("AWS_ENDPOINT"),
+	})
+	if err != nil {
+		log.Fatalf("Failed to initialize S3 storage: %v", err)
+	}
+
 	// Сервисы
 	userService := service.NewUserService(db)
 	collectionService := service.NewCollectionService(db)
-	uploadService := service.NewUploadService(db)
+	uploadService := service.NewUploadService(db, s3Storage)
 
 	// Обработчик
 	h := handler.NewHandler(userService, collectionService, uploadService)

@@ -25,6 +25,11 @@ services:
       - SMTP_PASSWORD=Shalimov123!!
       - SMTP_FROM=info@bookfoto.art
       - FRONTEND_URL=https://bookfoto.art
+      - AWS_REGION=ru1
+      - AWS_BUCKET=07123e0fb22a-book-foto-art
+      - AWS_ACCESS_KEY_ID=118X59R0ABESOSOVRFW6
+      - AWS_SECRET_ACCESS_KEY=4S5AskQ7Qwtz3YUm2csn4QEhOSVjvfmsyUfR4chF
+      - AWS_ENDPOINT=https://s3.ru1.storage.beget.cloud
     networks:
       - app-net
 

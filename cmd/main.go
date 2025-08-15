@@ -12,7 +12,6 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 
 	// "github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
@@ -27,13 +26,13 @@ import (
 // @schemes https
 func main() {
 
-	// Загрузка переменных окружения (local)
-	if err := godotenv.Load(".env.local"); err != nil {
-		log.Println("Error loading .env.local file")
-	}
+	// // Загрузка переменных окружения (local)
+	// if err := godotenv.Load(".env.local"); err != nil {
+	// 	log.Println("Error loading .env.local file")
+	// }
 
 	// БД
-	db := postgres.InitDB()
+	pgStorage := postgres.InitDB()
 
 	// S3 Storage
 	s3Storage, err := s3.NewS3Storage(s3.S3Config{
@@ -48,9 +47,9 @@ func main() {
 	}
 
 	// Сервисы
-	userService := service.NewUserService(db)
-	collectionService := service.NewCollectionService(db)
-	uploadService := service.NewUploadService(db, s3Storage)
+	userService := service.NewUserService(pgStorage)
+	collectionService := service.NewCollectionService(pgStorage, s3Storage)
+	uploadService := service.NewUploadService(pgStorage, s3Storage)
 
 	// Обработчик
 	h := handler.NewHandler(userService, collectionService, uploadService)

@@ -4,6 +4,7 @@ import (
 	"book-foto-art-back/internal/model"
 	"book-foto-art-back/internal/shared"
 	"book-foto-art-back/internal/storage/postgres"
+	"book-foto-art-back/internal/storage/s3"
 	"context"
 	"log"
 	"os"
@@ -13,11 +14,15 @@ import (
 )
 
 type CollectionService struct {
-	Storage *postgres.Storage
+	Postgres *postgres.Storage
+	S3       *s3.S3Storage
 }
 
-func NewCollectionService(s *postgres.Storage) *CollectionService {
-	return &CollectionService{Storage: s}
+func NewCollectionService(pg *postgres.Storage, s3 *s3.S3Storage) *CollectionService {
+	return &CollectionService{
+		Postgres: pg,
+		S3:       s3,
+	}
 }
 
 func (s *CollectionService) CreateCollection(ctx context.Context, userID uuid.UUID, name string, date time.Time) (
@@ -32,21 +37,29 @@ func (s *CollectionService) CreateCollection(ctx context.Context, userID uuid.UU
 		CoverURL:          defaultCoverURL,
 		CoverThumbnailURL: defaultCoverThumbnailURL,
 	}
-	return s.Storage.CreateCollection(ctx, collection)
+	return s.Postgres.CreateCollection(ctx, collection)
 }
 
 func (s *CollectionService) GetCollectionInfo(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) (
 	*model.Collection, error) {
-	return s.Storage.GetCollectionInfo(ctx, userID, collectionID)
+	return s.Postgres.GetCollectionInfo(ctx, userID, collectionID)
 }
 
 func (s *CollectionService) GetCollections(ctx context.Context, userID uuid.UUID, searchParam string) (
 	[]model.Collection, error) {
-	return s.Storage.GetCollections(ctx, userID, searchParam)
+	return s.Postgres.GetCollections(ctx, userID, searchParam)
 }
 
 func (s *CollectionService) DeleteCollection(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) error {
-	return s.Storage.DeleteCollection(ctx, userID, collectionID)
+	err := s.S3.DeleteCollection(ctx, collectionID)
+	if err != nil {
+		return err
+	}
+	err = s.Postgres.DeleteCollection(ctx, userID, collectionID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *CollectionService) GetCollectionPhotos(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, sortParam string) (
@@ -57,7 +70,7 @@ func (s *CollectionService) GetCollectionPhotos(ctx context.Context, userID uuid
 		sort = shared.DefaultSort
 	}
 	// Получаем содержимое коллекции из БД
-	photos, err := s.Storage.GetCollectionPhotos(ctx, userID, collectionID, sort)
+	photos, err := s.Postgres.GetCollectionPhotos(ctx, userID, collectionID, sort)
 	if err != nil {
 		log.Printf("Storage ERROR: %v\n", err)
 		return []model.UploadedPhoto{}, "", err
@@ -66,10 +79,22 @@ func (s *CollectionService) GetCollectionPhotos(ctx context.Context, userID uuid
 }
 
 func (s *CollectionService) DeletePhoto(ctx context.Context, userID uuid.UUID, photoID uuid.UUID) error {
-	return s.Storage.DeletePhoto(ctx, userID, photoID)
+	photo, err := s.Postgres.GetCollectionPhoto(ctx, userID, photoID)
+	if err != nil {
+		return err
+	}
+	err = s.S3.DeletePhoto(ctx, photo.CollectionID, photo.FileName)
+	if err != nil {
+		return err
+	}
+	err = s.Postgres.DeletePhoto(ctx, userID, photoID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *CollectionService) UpdateCollectionCover(
 	ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, uploadedPhotoID uuid.UUID) error {
-	return s.Storage.UpdateCollectionCover(ctx, userID, collectionID, uploadedPhotoID)
+	return s.Postgres.UpdateCollectionCover(ctx, userID, collectionID, uploadedPhotoID)
 }

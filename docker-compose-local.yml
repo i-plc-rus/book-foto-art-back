@@ -14,8 +14,6 @@ services:
       - DB_PASSWORD=apppass
       - DB_NAME=appdb
       - JWT_SECRET=supersecret123
-      - DEFAULT_COLLECTION_COVER_URL=/static/default_collection_cover.jpg
-      - DEFAULT_COLLECTION_COVER_THUMB_URL=/static/default_collection_cover_thumb.jpg
       - SMTP_HOST=mail.nic.ru
       - SMTP_PORT=587
       - SMTP_USERNAME=info@bookfoto.art

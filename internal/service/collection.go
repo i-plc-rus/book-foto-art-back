@@ -6,6 +6,7 @@ import (
 	"book-foto-art-back/internal/storage/postgres"
 	"book-foto-art-back/internal/storage/s3"
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -27,8 +28,8 @@ func NewCollectionService(pg *postgres.Storage, s3 *s3.S3Storage) *CollectionSer
 
 func (s *CollectionService) CreateCollection(ctx context.Context, userID uuid.UUID, name string, date time.Time) (
 	*model.Collection, error) {
-	defaultCoverURL := os.Getenv("DEFAULT_COLLECTION_COVER_URL")
-	defaultCoverThumbnailURL := os.Getenv("DEFAULT_COLLECTION_COVER_THUMB_URL")
+	defaultCoverURL := fmt.Sprintf("%s/%s/default_collection_cover/default_cover.jpg", os.Getenv("AWS_ENDPOINT"), os.Getenv("AWS_BUCKET"))
+	defaultCoverThumbnailURL := fmt.Sprintf("%s/%s/default_collection_cover/default_cover_thumb.jpg", os.Getenv("AWS_ENDPOINT"), os.Getenv("AWS_BUCKET"))
 
 	collection := model.Collection{
 		UserID:            userID,

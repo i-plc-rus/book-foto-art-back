@@ -121,9 +121,6 @@ func main() {
 		upload.POST("/files", h.UploadFiles)
 	}
 
-	// Статические файлы
-	r.Static("/static", "/static")
-
 	// Swagger
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

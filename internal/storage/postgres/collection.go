@@ -67,7 +67,7 @@ func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID, searchPa
 	var collections []model.Collection
 	for rows.Next() {
 		var c model.Collection
-		err := rows.Scan(&c.ID, &c.Name, &c.Date, &c.CreatedAt, &c.CoverURL, &c.CoverThumbnailURL, &c.UserName)
+		err := rows.Scan(&c.ID, &c.UserID, &c.Name, &c.Date, &c.CreatedAt, &c.CoverURL, &c.CoverThumbnailURL, &c.UserName)
 		if err != nil {
 			return nil, err
 		}

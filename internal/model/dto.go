@@ -77,6 +77,7 @@ type CollectionInfoResponse struct {
 	CreatedAt         string `json:"created_at" example:"2025-0715:12:00Z"`
 	CoverURL          string `json:"cover_url"`
 	CoverThumbnailURL string `json:"cover_thumbnail_url"`
+	UserName          string `json:"username"`
 }
 
 type CollectionsListResponse struct {

@@ -669,6 +669,9 @@ const docTemplate = `{
                 "user_id": {
                     "type": "string",
                     "example": "06301788-e325-488f-94b5-1711e211b82a"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },

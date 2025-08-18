@@ -14,4 +14,5 @@ type Collection struct {
 	CreatedAt         time.Time `json:"created_at"`
 	CoverURL          string    `json:"cover_url"`
 	CoverThumbnailURL string    `json:"cover_thumbnail_url"`
+	UserName          string    `json:"username"`
 }

@@ -30,11 +30,11 @@ func (s *Storage) CreateCollection(ctx context.Context, col model.Collection) (*
 }
 
 func (s *Storage) GetCollectionInfo(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) (*model.Collection, error) {
-	row := s.DB.QueryRow(ctx,
-		`SELECT id, user_id, name, date, created_at, cover_url, cover_thumbnail_url, username
-		 FROM collections
-		 JOIN users ON collections.user_id = users.id
-		 WHERE user_id = $1 AND id = $2`, userID, collectionID,
+	row := s.DB.QueryRow(ctx, `
+		SELECT c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url, c.cover_thumbnail_url, u.username
+		FROM collections c
+		JOIN users u ON c.user_id = u.id
+		WHERE c.user_id = $1 AND c.id = $2`, userID, collectionID,
 	)
 	var col model.Collection
 	if err := row.Scan(
@@ -45,11 +45,10 @@ func (s *Storage) GetCollectionInfo(ctx context.Context, userID uuid.UUID, colle
 }
 
 func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID, searchParam string) ([]model.Collection, error) {
-	rows, err := s.DB.Query(ctx,
-		`
-        SELECT id, name, date, created_at, cover_url, cover_thumbnail_url, username
-        FROM collections
-        JOIN users ON collections.user_id = users.id
+	rows, err := s.DB.Query(ctx, `
+		SELECT c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url, c.cover_thumbnail_url, u.username
+		FROM collections c
+		JOIN users u ON c.user_id = u.id
         WHERE user_id = $1 AND ($2 = '' OR name ILIKE $3)
         ORDER BY
             CASE

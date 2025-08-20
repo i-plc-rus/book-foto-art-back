@@ -21,6 +21,8 @@ definitions:
       id:
         example: 06301788-e325-488f-94b5-1711e211b82a
         type: string
+      is_published:
+        type: boolean
       name:
         example: My Collection
         type: string
@@ -34,7 +36,7 @@ definitions:
     properties:
       files:
         items:
-          $ref: '#/definitions/model.UploadedPhoto'
+          $ref: '#/definitions/model.UploadedFile'
         type: array
       sort:
         example: uploaded_new
@@ -94,6 +96,12 @@ definitions:
         example: 06301788-e325-488f-94b5-1711e211b82a
         type: string
     type: object
+  model.PublishCollectionResponse:
+    properties:
+      link:
+        example: https://book-foto-art.ru/s/e325488f-94b5-1711e211b82a
+        type: string
+    type: object
   model.RefreshRequest:
     description: Структура запроса для обновления токена доступа
     properties:
@@ -127,6 +135,27 @@ definitions:
     properties:
       new_password:
         example: password123
+        type: string
+    type: object
+  model.ShortLinkInfoResponse:
+    properties:
+      click_count:
+        example: 100
+        type: integer
+      collection_id:
+        example: 06301788-e325-488f-94b5-1711e211b82a
+        type: string
+      created_at:
+        example: 2025-0715:12:00Z
+        type: string
+      id:
+        example: 06301788-e325-488f-94b5-1711e211b82a
+        type: string
+      token:
+        example: e325488f-94b5-1711e211b82a
+        type: string
+      url:
+        example: https://book-foto-art.ru/s/e325488f-94b5-1711e211b82a
         type: string
     type: object
   model.TokenResponse:
@@ -175,27 +204,6 @@ definitions:
         type: string
       user_id:
         example: 06301788-e325-488f-94b5-1711e211b82a
-        type: string
-    type: object
-  model.UploadedPhoto:
-    properties:
-      collection_id:
-        type: string
-      file_ext:
-        type: string
-      file_name:
-        type: string
-      hash_name:
-        type: string
-      id:
-        type: string
-      original_url:
-        type: string
-      thumbnail_url:
-        type: string
-      uploaded_at:
-        type: string
-      user_id:
         type: string
     type: object
 host: api.bookfoto.art
@@ -485,6 +493,64 @@ paths:
       summary: Получить фотографии коллекции
       tags:
       - Collection
+  /collection/{id}/publish:
+    put:
+      consumes:
+      - application/json
+      description: Публикует коллекцию по ID
+      parameters:
+      - description: ID коллекции
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.PublishCollectionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Публикация коллекции
+      tags:
+      - Collection
+  /collection/{id}/unpublish:
+    put:
+      consumes:
+      - application/json
+      description: Снимает публикацию коллекции по ID
+      parameters:
+      - description: ID коллекции
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.BooleanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Снятие публикации коллекции
+      tags:
+      - Collection
   /collection/create:
     post:
       consumes:
@@ -568,6 +634,38 @@ paths:
       summary: Удалить фотографию
       tags:
       - Collection
+  /collection/short_link_info/{token}:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает информацию о короткой ссылке по токену
+      parameters:
+      - description: Токен короткой ссылки
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              short_link_info:
+                $ref: '#/definitions/model.ShortLinkInfoResponse'
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Получить информацию о короткой ссылке
+      tags:
+      - Collection
   /profile/:
     get:
       consumes:
@@ -587,6 +685,61 @@ paths:
       summary: Получить профиль пользователя
       tags:
       - Profile
+  /public/collection/{token}/photos:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список фотографий в коллекции с возможностью сортировки.
+      parameters:
+      - description: ID коллекции
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 'Сортировка. Возможные значения: uploaded_new (по дате загрузки,
+          новые сверху), uploaded_old (по дате загрузки, старые сверху), name_az (по
+          имени файла, A-Z), name_za (по имени файла, Z-A), random (случайный порядок).
+          По умолчанию: uploaded_new'
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.CollectionPhotosResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Получить фотографии публичной коллекции
+      tags:
+      - Collection
+  /s/{token}:
+    get:
+      consumes:
+      - application/json
+      description: Перенаправляет на публичную коллекцию по токену
+      parameters:
+      - description: Токен короткой ссылки
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Found
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Перенаправление на публичную коллекцию
+      tags:
+      - Collection
   /upload/files:
     post:
       consumes:

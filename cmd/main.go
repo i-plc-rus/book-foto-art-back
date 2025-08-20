@@ -112,6 +112,17 @@ func main() {
 		collection.GET("/:id/photos", h.GetCollectionPhotos)
 		collection.PUT("/:id/cover", h.UpdateCollectionCover)
 		collection.DELETE("/photo/:photo_id", h.DeletePhoto)
+		collection.PUT("/:id/publish", h.PublishCollection)
+		collection.PUT("/:id/unpublish", h.UnpublishCollection)
+		collection.GET("/short_link_info/:token", h.GetShortLinkInfo)
+	}
+	shortLink := r.Group("/s")
+	{
+		shortLink.GET("/:token", h.RedirectToPublicCollection)
+	}
+	public := r.Group("/public")
+	{
+		public.GET("collection/:token/photos", h.GetPublicCollectionPhotos)
 	}
 
 	// Загрузка файлов

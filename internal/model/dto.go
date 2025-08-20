@@ -78,6 +78,7 @@ type CollectionInfoResponse struct {
 	CoverURL          string `json:"cover_url"`
 	CoverThumbnailURL string `json:"cover_thumbnail_url"`
 	UserName          string `json:"username"`
+	IsPublished       bool   `json:"is_published"`
 }
 
 type CollectionsListResponse struct {
@@ -110,10 +111,23 @@ type UploadFilesResponse struct {
 }
 
 type CollectionPhotosResponse struct {
-	Photos []UploadedPhoto `json:"files"`
-	Sort   string          `json:"sort" example:"uploaded_new"`
+	Photos []UploadedFile `json:"files"`
+	Sort   string         `json:"sort" example:"uploaded_new"`
 }
 
 type UpdateCollectionCoverRequest struct {
 	PhotoID string `json:"photo_id" example:"06301788-e325-488f-94b5-1711e211b82a"`
+}
+
+type PublishCollectionResponse struct {
+	Link string `json:"link" example:"https://book-foto-art.ru/s/e325488f-94b5-1711e211b82a"`
+}
+
+type ShortLinkInfoResponse struct {
+	ID           uuid.UUID `json:"id" example:"06301788-e325-488f-94b5-1711e211b82a"`
+	CollectionID uuid.UUID `json:"collection_id" example:"06301788-e325-488f-94b5-1711e211b82a"`
+	URL          string    `json:"url" example:"https://book-foto-art.ru/s/e325488f-94b5-1711e211b82a"`
+	Token        string    `json:"token" example:"e325488f-94b5-1711e211b82a"`
+	CreatedAt    time.Time `json:"created_at" example:"2025-0715:12:00Z"`
+	ClickCount   uint      `json:"click_count" example:"100"`
 }

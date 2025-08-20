@@ -1,17 +1,21 @@
 package service
 
 import (
+	"context"
+	"crypto/rand"
+	"encoding/base64"
+	"fmt"
+	"log"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/google/uuid"
+
 	"book-foto-art-back/internal/model"
 	"book-foto-art-back/internal/shared"
 	"book-foto-art-back/internal/storage/postgres"
 	"book-foto-art-back/internal/storage/s3"
-	"context"
-	"fmt"
-	"log"
-	"os"
-	"time"
-
-	"github.com/google/uuid"
 )
 
 type CollectionService struct {
@@ -77,6 +81,66 @@ func (s *CollectionService) GetCollectionPhotos(ctx context.Context, userID uuid
 		return []model.UploadedPhoto{}, "", err
 	}
 	return photos, string(sort), err
+}
+
+func (s *CollectionService) PublishCollection(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) (string, error) {
+	// Генерируем уникальный токен
+	bytes := make([]byte, 6)
+	rand.Read(bytes)
+	token := base64.URLEncoding.EncodeToString(bytes)
+	token = strings.ReplaceAll(token, "+", "-")
+	token = strings.ReplaceAll(token, "/", "_")
+
+	// Генерируем короткую ссылку на коллекцию
+	link := fmt.Sprintf("%s/s/%s", os.Getenv("FRONTEND_URL"), token)
+
+	// Публикуем коллекцию
+	link, err := s.Postgres.PublishCollection(ctx, userID, collectionID, token, link)
+	if err != nil {
+		return "", err
+	}
+	return link, nil
+}
+
+func (s *CollectionService) GetPublicCollectionLink(ctx context.Context, token string) (string, error) {
+	err := s.Postgres.UpdateShortLink(ctx, token)
+	if err != nil {
+		return "", err
+	}
+	link := fmt.Sprintf("/public/collection/%s/photos", token)
+	return link, nil
+}
+
+func (s *CollectionService) GetPublicCollectionPhotos(ctx context.Context, token string, sortParam string) (
+	[]model.UploadedPhoto, string, error) {
+	// Выбираем параметр сортировки
+	sort := shared.SortOption(sortParam)
+	if _, ok := shared.ValidSorts[sort]; !ok {
+		sort = shared.DefaultSort
+	}
+	// Получаем содержимое коллекции из БД
+	photos, err := s.Postgres.GetPublicCollectionPhotos(ctx, token, sort)
+	if err != nil {
+		log.Printf("Storage ERROR: %v\n", err)
+		return []model.UploadedPhoto{}, "", err
+	}
+	return photos, string(sort), err
+}
+
+func (s *CollectionService) UnpublishCollection(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) error {
+	err := s.Postgres.UnpublishCollection(ctx, userID, collectionID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *CollectionService) GetShortLinkInfo(ctx context.Context, token string) (model.ShortLink, error) {
+	shortLink, err := s.Postgres.GetShortLinkInfo(ctx, token)
+	if err != nil {
+		return model.ShortLink{}, err
+	}
+	return shortLink, nil
 }
 
 func (s *CollectionService) DeletePhoto(ctx context.Context, userID uuid.UUID, photoID uuid.UUID) error {

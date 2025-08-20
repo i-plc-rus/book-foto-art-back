@@ -385,6 +385,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/collection/short_link_info/{token}": {
+            "get": {
+                "description": "Возвращает информацию о короткой ссылке по токену",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Collection"
+                ],
+                "summary": "Получить информацию о короткой ссылке",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Токен короткой ссылки",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "short_link_info": {
+                                    "$ref": "#/definitions/model.ShortLinkInfoResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    }
+                }
+            }
+        },
         "/collection/{id}": {
             "get": {
                 "description": "Возвращает информацию о коллекции по ID",
@@ -556,6 +605,94 @@ const docTemplate = `{
                 }
             }
         },
+        "/collection/{id}/publish": {
+            "put": {
+                "description": "Публикует коллекцию по ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Collection"
+                ],
+                "summary": "Публикация коллекции",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID коллекции",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.PublishCollectionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    }
+                }
+            }
+        },
+        "/collection/{id}/unpublish": {
+            "put": {
+                "description": "Снимает публикацию коллекции по ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Collection"
+                ],
+                "summary": "Снятие публикации коллекции",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID коллекции",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.BooleanResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    }
+                }
+            }
+        },
         "/profile/": {
             "get": {
                 "description": "Возвращает данные профиля текущего пользователя",
@@ -578,6 +715,85 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/collection/{token}/photos": {
+            "get": {
+                "description": "Возвращает список фотографий в коллекции с возможностью сортировки.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Collection"
+                ],
+                "summary": "Получить фотографии публичной коллекции",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID коллекции",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Сортировка. Возможные значения: uploaded_new (по дате загрузки, новые сверху), uploaded_old (по дате загрузки, старые сверху), name_az (по имени файла, A-Z), name_za (по имени файла, Z-A), random (случайный порядок). По умолчанию: uploaded_new",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.CollectionPhotosResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    }
+                }
+            }
+        },
+        "/s/{token}": {
+            "get": {
+                "description": "Перенаправляет на публичную коллекцию по токену",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Collection"
+                ],
+                "summary": "Перенаправление на публичную коллекцию",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Токен короткой ссылки",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Found"
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/model.ErrorMessage"
                         }
@@ -662,6 +878,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "06301788-e325-488f-94b5-1711e211b82a"
                 },
+                "is_published": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string",
                     "example": "My Collection"
@@ -681,7 +900,7 @@ const docTemplate = `{
                 "files": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/model.UploadedPhoto"
+                        "$ref": "#/definitions/model.UploadedFile"
                     }
                 },
                 "sort": {
@@ -769,6 +988,15 @@ const docTemplate = `{
                 }
             }
         },
+        "model.PublishCollectionResponse": {
+            "type": "object",
+            "properties": {
+                "link": {
+                    "type": "string",
+                    "example": "https://book-foto-art.ru/s/e325488f-94b5-1711e211b82a"
+                }
+            }
+        },
         "model.RefreshRequest": {
             "description": "Структура запроса для обновления токена доступа",
             "type": "object",
@@ -816,6 +1044,35 @@ const docTemplate = `{
                 "new_password": {
                     "type": "string",
                     "example": "password123"
+                }
+            }
+        },
+        "model.ShortLinkInfoResponse": {
+            "type": "object",
+            "properties": {
+                "click_count": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "collection_id": {
+                    "type": "string",
+                    "example": "06301788-e325-488f-94b5-1711e211b82a"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-0715:12:00Z"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "06301788-e325-488f-94b5-1711e211b82a"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "e325488f-94b5-1711e211b82a"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://book-foto-art.ru/s/e325488f-94b5-1711e211b82a"
                 }
             }
         },
@@ -886,38 +1143,6 @@ const docTemplate = `{
                 "user_id": {
                     "type": "string",
                     "example": "06301788-e325-488f-94b5-1711e211b82a"
-                }
-            }
-        },
-        "model.UploadedPhoto": {
-            "type": "object",
-            "properties": {
-                "collection_id": {
-                    "type": "string"
-                },
-                "file_ext": {
-                    "type": "string"
-                },
-                "file_name": {
-                    "type": "string"
-                },
-                "hash_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "original_url": {
-                    "type": "string"
-                },
-                "thumbnail_url": {
-                    "type": "string"
-                },
-                "uploaded_at": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
                 }
             }
         }

@@ -31,14 +31,15 @@ func (s *Storage) CreateCollection(ctx context.Context, col model.Collection) (*
 
 func (s *Storage) GetCollectionInfo(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) (*model.Collection, error) {
 	row := s.DB.QueryRow(ctx, `
-		SELECT c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url, c.cover_thumbnail_url, u.username
+		SELECT c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url, c.cover_thumbnail_url, u.username, c.is_published
 		FROM collections c
 		JOIN users u ON c.user_id = u.id
 		WHERE c.user_id = $1 AND c.id = $2`, userID, collectionID,
 	)
 	var col model.Collection
 	if err := row.Scan(
-		&col.ID, &col.UserID, &col.Name, &col.Date, &col.CreatedAt, &col.CoverURL, &col.CoverThumbnailURL, &col.UserName); err != nil {
+		&col.ID, &col.UserID, &col.Name, &col.Date, &col.CreatedAt, &col.CoverURL,
+		&col.CoverThumbnailURL, &col.UserName, &col.IsPublished); err != nil {
 		return nil, err
 	}
 	return &col, nil
@@ -46,7 +47,7 @@ func (s *Storage) GetCollectionInfo(ctx context.Context, userID uuid.UUID, colle
 
 func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID, searchParam string) ([]model.Collection, error) {
 	rows, err := s.DB.Query(ctx, `
-		SELECT c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url, c.cover_thumbnail_url, u.username
+		SELECT c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url, c.cover_thumbnail_url, u.username, c.is_published
 		FROM collections c
 		JOIN users u ON c.user_id = u.id
         WHERE user_id = $1 AND ($2 = '' OR name ILIKE $3)
@@ -67,7 +68,7 @@ func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID, searchPa
 	var collections []model.Collection
 	for rows.Next() {
 		var c model.Collection
-		err := rows.Scan(&c.ID, &c.UserID, &c.Name, &c.Date, &c.CreatedAt, &c.CoverURL, &c.CoverThumbnailURL, &c.UserName)
+		err := rows.Scan(&c.ID, &c.UserID, &c.Name, &c.Date, &c.CreatedAt, &c.CoverURL, &c.CoverThumbnailURL, &c.UserName, &c.IsPublished)
 		if err != nil {
 			return nil, err
 		}
@@ -161,6 +162,158 @@ func (s *Storage) GetCollectionPhotos(ctx context.Context, userID uuid.UUID, col
 		result = append(result, f)
 	}
 	return result, nil
+}
+
+func (s *Storage) PublishCollection(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, token string, newLink string) (string, error) {
+
+	// Проверяем наличие короткой ссылки на коллекцию
+	row := s.DB.QueryRow(ctx, `
+		SELECT url
+		FROM short_links
+		WHERE collection_id = $1
+	`, collectionID)
+	var link string
+	_ = row.Scan(&link)
+	if link != "" {
+		return link, nil
+	}
+
+	// Если короткая ссылка не существует, то обновляем коллекцию и создаем короткую ссылку
+	tx, err := s.DB.Begin(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback(ctx)
+
+	_, err = tx.Exec(ctx, `
+		UPDATE collections
+		SET is_published = true
+		WHERE user_id = $1 AND id = $2
+	`, userID, collectionID)
+	if err != nil {
+		return "", err
+	}
+	_, err = tx.Exec(ctx, `
+		INSERT INTO short_links (collection_id, token, url)
+		VALUES ($1, $2, $3)
+	`, collectionID, token, newLink)
+	if err != nil {
+		return "", err
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		return "", err
+	}
+	return newLink, nil
+}
+
+func (s *Storage) UpdateShortLink(ctx context.Context, token string) error {
+	res, err := s.DB.Exec(ctx, `
+		UPDATE short_links
+		SET click_count = click_count + 1
+		WHERE token = $1
+	`, token)
+	if err != nil {
+		return err
+	}
+	rowsAffected := res.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+func (s *Storage) GetPublicCollectionPhotos(ctx context.Context, token string, sort shared.SortOption) (
+	[]model.UploadedPhoto, error) {
+
+	// Определяем SQL для сортировки
+	var orderBy string
+	switch sort {
+	case shared.SortUploadedNew:
+		orderBy = " ORDER BY uploaded_at DESC"
+	case shared.SortUploadedOld:
+		orderBy = " ORDER BY uploaded_at ASC"
+	case shared.SortNameAZ:
+		orderBy = " ORDER BY file_name ASC"
+	case shared.SortNameZA:
+		orderBy = " ORDER BY file_name DESC"
+	case shared.SortRandom:
+		orderBy = " ORDER BY RANDOM()"
+	default:
+		orderBy = " ORDER BY uploaded_at DESC"
+	}
+
+	rows, err := s.DB.Query(ctx,
+		`SELECT id, collection_id, user_id, original_url, thumbnail_url, file_name, file_ext, hash_name, uploaded_at
+		 FROM uploaded_photos
+		 WHERE collection_id = (SELECT collection_id FROM short_links WHERE token = $1)`+orderBy, token,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []model.UploadedPhoto
+	for rows.Next() {
+		var f model.UploadedPhoto
+		if err := rows.Scan(&f.ID, &f.CollectionID, &f.UserID, &f.OriginalURL, &f.ThumbnailURL,
+			&f.FileName, &f.FileExt, &f.HashName, &f.UploadedAt); err != nil {
+			return nil, err
+		}
+		result = append(result, f)
+	}
+	return result, nil
+}
+
+func (s *Storage) UnpublishCollection(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) error {
+	tx, err := s.DB.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	res, err := tx.Exec(ctx, `
+		UPDATE collections
+		SET is_published = false
+		WHERE user_id = $1 AND id = $2
+	`, userID, collectionID)
+	if err != nil {
+		return err
+	}
+	rowsAffected := res.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	res, err = tx.Exec(ctx, `
+		DELETE FROM short_links
+		WHERE collection_id = $1
+	`, collectionID)
+	if err != nil {
+		return err
+	}
+	rowsAffected = res.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Storage) GetShortLinkInfo(ctx context.Context, token string) (model.ShortLink, error) {
+	row := s.DB.QueryRow(ctx, `
+		SELECT id, collection_id, url, token, created_at, click_count
+		FROM short_links
+		WHERE token = $1
+	`, token)
+	var shortLink model.ShortLink
+	if err := row.Scan(
+		&shortLink.ID, &shortLink.CollectionID, &shortLink.URL, &shortLink.Token, &shortLink.CreatedAt, &shortLink.ClickCount); err != nil {
+		return model.ShortLink{}, err
+	}
+	return shortLink, nil
 }
 
 func (s *Storage) GetCollectionPhoto(ctx context.Context, userID uuid.UUID, photoID uuid.UUID) (*model.UploadedPhoto, error) {

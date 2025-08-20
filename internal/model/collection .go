@@ -15,4 +15,14 @@ type Collection struct {
 	CoverURL          string    `json:"cover_url"`
 	CoverThumbnailURL string    `json:"cover_thumbnail_url"`
 	UserName          string    `json:"username"`
+	IsPublished       bool      `json:"is_published"`
+}
+
+type ShortLink struct {
+	ID           uuid.UUID `json:"id"`
+	CollectionID uuid.UUID `json:"collection_id"`
+	URL          string    `json:"url"`
+	Token        string    `json:"token"`
+	CreatedAt    time.Time `json:"created_at"`
+	ClickCount   uint      `json:"click_count"`
 }

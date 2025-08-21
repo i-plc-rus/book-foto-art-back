@@ -17,6 +17,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+
+	exif "github.com/rwcarlsen/goexif/exif"
 	"golang.org/x/image/bmp"
 	"golang.org/x/image/tiff"
 )
@@ -112,8 +114,15 @@ func (s *S3Storage) createThumbnail(data []byte, ext string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to decode image: %w", err)
 	}
 
+	// Корректируем ориентацию на основе EXIF данных
+	correctedImg, err := s.correctImageOrientation(data, img)
+	if err != nil {
+		log.Printf("Warning: failed to correct image orientation: %v", err)
+		correctedImg = img
+	}
+
 	// Создаем миниатюру
-	thumb := imaging.Thumbnail(img, 300, 300, imaging.Lanczos)
+	thumb := imaging.Thumbnail(correctedImg, 300, 300, imaging.Lanczos)
 
 	// Кодируем миниатюру в зависимости от расширения файла
 	var buf bytes.Buffer
@@ -133,6 +142,55 @@ func (s *S3Storage) createThumbnail(data []byte, ext string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to encode thumbnail: %w", err)
 	}
 	return buf.Bytes(), nil
+}
+
+// correctImageOrientation корректирует ориентацию изображения на основе EXIF данных
+func (s *S3Storage) correctImageOrientation(data []byte, img image.Image) (image.Image, error) {
+	// Читаем EXIF данные
+	exifData, err := exif.Decode(bytes.NewReader(data))
+	if err != nil {
+		// Если EXIF данные отсутствуют или не могут быть прочитаны, возвращаем оригинал
+		return img, fmt.Errorf("no EXIF data: %w", err)
+	}
+
+	// Получаем тег ориентации
+	orientation, err := exifData.Get(exif.Orientation)
+	if err != nil {
+		// Если тег ориентации отсутствует, возвращаем оригинал
+		return img, fmt.Errorf("no orientation tag: %w", err)
+	}
+
+	// Получаем значение ориентации
+	orientationValue, err := orientation.Int(0)
+	if err != nil {
+		return img, fmt.Errorf("failed to get orientation value: %w", err)
+	}
+
+	fmt.Printf("img: %v\norientationValue: %v\n", img.Bounds(), orientationValue)
+
+	// Применяем соответствующее преобразование
+	switch orientationValue {
+	case 1: // Normal
+		return img, nil
+	case 2: // Flip horizontal
+		return imaging.FlipH(img), nil
+	case 3: // Rotate 180
+		return imaging.Rotate180(img), nil
+	case 4: // Flip vertical
+		return imaging.FlipV(img), nil
+	case 5: // Transpose (flip horizontal + rotate 90 CCW)
+		img = imaging.FlipH(img)
+		return imaging.Rotate90(img), nil
+	case 6: // Rotate 90 CW
+		return imaging.Rotate270(img), nil
+	case 7: // Transverse (flip horizontal + rotate 270 CW)
+		img = imaging.FlipH(img)
+		return imaging.Rotate270(img), nil
+	case 8: // Rotate 90 CCW
+		return imaging.Rotate270(img), nil
+	default:
+		return img, nil
+	}
 }
 
 // uploadBytes загружает байты в S3

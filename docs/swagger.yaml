@@ -376,6 +376,53 @@ paths:
       summary: Сброс пароля
       tags:
       - Auth
+  /auth/yandex/callback:
+    get:
+      consumes:
+      - application/json
+      description: Обрабатывает ответ от Яндекса после успешной авторизации
+      parameters:
+      - description: Код авторизации от Яндекса
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: State параметр для безопасности
+        in: query
+        name: state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешная аутентификация
+          schema:
+            $ref: '#/definitions/model.TokenResponse'
+        "400":
+          description: Неверные параметры
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+        "401":
+          description: Ошибка аутентификации
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Обработка callback от Яндекс OAuth
+      tags:
+      - Auth
+  /auth/yandex/login:
+    get:
+      consumes:
+      - application/json
+      description: Перенаправляет пользователя на страницу авторизации Яндекса
+      produces:
+      - application/json
+      responses:
+        "302":
+          description: Перенаправление на Яндекс
+      summary: Перенаправление на Яндекс OAuth
+      tags:
+      - Auth
   /collection/{id}:
     delete:
       consumes:

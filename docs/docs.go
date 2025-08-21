@@ -258,6 +258,77 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/yandex/callback": {
+            "get": {
+                "description": "Обрабатывает ответ от Яндекса после успешной авторизации",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Обработка callback от Яндекс OAuth",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Код авторизации от Яндекса",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "State параметр для безопасности",
+                        "name": "state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Успешная аутентификация",
+                        "schema": {
+                            "$ref": "#/definitions/model.TokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверные параметры",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "401": {
+                        "description": "Ошибка аутентификации",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/yandex/login": {
+            "get": {
+                "description": "Перенаправляет пользователя на страницу авторизации Яндекса",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Перенаправление на Яндекс OAuth",
+                "responses": {
+                    "302": {
+                        "description": "Перенаправление на Яндекс"
+                    }
+                }
+            }
+        },
         "/collection/create": {
             "post": {
                 "description": "Создаёт новую коллекцию для пользователя",

@@ -48,11 +48,17 @@ func main() {
 
 	// Сервисы
 	userService := service.NewUserService(pgStorage)
+	oauthService := service.NewYandexOAuthService(service.NewYandexOAuthConfig(), pgStorage)
 	collectionService := service.NewCollectionService(pgStorage, s3Storage)
 	uploadService := service.NewUploadService(pgStorage, s3Storage)
 
 	// Обработчик
-	h := handler.NewHandler(userService, collectionService, uploadService)
+	h := handler.NewHandler(
+		userService,
+		oauthService,
+		collectionService,
+		uploadService,
+	)
 
 	//r := gin.Default()
 	gin.SetMode(gin.ReleaseMode)
@@ -87,11 +93,11 @@ func main() {
 	{
 		auth.POST("/register", h.Register)
 		auth.POST("/login", h.Login)
+		auth.GET("/yandex/login", h.YandexLogin)
+		auth.GET("/yandex/callback", h.YandexCallback)
 		auth.POST("/refresh", h.Refresh)
 		auth.POST("/forgot-password", h.ForgotPassword)
 		auth.POST("/reset-password", h.ResetPassword)
-		//auth.GET("/yandex/login", h.YandexLogin)
-		//auth.GET("/yandex/callback", h.YandexCallback)
 	}
 
 	// Профиль

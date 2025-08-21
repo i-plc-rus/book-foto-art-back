@@ -56,7 +56,7 @@ func (s *UserService) Register(ctx context.Context, username, email, password st
 	}
 
 	// Генерируем JWT токены
-	access, refresh, err := generateTokens(createdUser.ID)
+	access, refresh, err := GenerateTokens(createdUser.ID)
 	if err != nil {
 		return "", "", err
 	}
@@ -77,7 +77,7 @@ func (s *UserService) Login(ctx context.Context, email, password string) (string
 	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
 		return "", "", errors.New("invalid credentials")
 	}
-	access, refresh, err := generateTokens(u.ID)
+	access, refresh, err := GenerateTokens(u.ID)
 	if err != nil {
 		return "", "", err
 	}
@@ -166,7 +166,7 @@ func generateJWT(userID uuid.UUID, expiry time.Duration) (string, error) {
 	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }
 
-func generateTokens(userID uuid.UUID) (string, string, error) {
+func GenerateTokens(userID uuid.UUID) (string, string, error) {
 	access, err := generateJWT(userID, accessTokenDuration)
 	if err != nil {
 		return "", "", err

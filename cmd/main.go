@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	// "github.com/joho/godotenv"
+
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -91,6 +92,7 @@ func main() {
 	// Авторизация
 	auth := r.Group("/auth")
 	{
+		auth.Use(h.SessionsMiddleware())
 		auth.POST("/register", h.Register)
 		auth.POST("/login", h.Login)
 		auth.GET("/yandex/login", h.YandexLogin)

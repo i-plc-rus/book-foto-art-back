@@ -28,6 +28,7 @@ services:
       - AWS_ACCESS_KEY_ID=118X59R0ABESOSOVRFW6
       - AWS_SECRET_ACCESS_KEY=4S5AskQ7Qwtz3YUm2csn4QEhOSVjvfmsyUfR4chF
       - AWS_ENDPOINT=https://s3.ru1.storage.beget.cloud
+      - SESSION_SECRET=secret123
       - YANDEX_CLIENT_ID=8e3396b3966c421db32bca11586e4f7f
       - YANDEX_CLIENT_SECRET=7cf1c0a122024f28a037261fa5e766f0
       - YANDEX_REDIRECT_URL=https://bookfoto.art/verification

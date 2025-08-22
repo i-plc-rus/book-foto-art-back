@@ -75,9 +75,6 @@ func main() {
 		c.AbortWithStatusJSON(500, gin.H{"error": "internal server error"})
 	}))
 
-	// Сессии для яндекс oauth
-	r.Use(h.SessionsMiddleware())
-
 	// Настройка CORS
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"https://bookfoto.art", "http://localhost:4200"},

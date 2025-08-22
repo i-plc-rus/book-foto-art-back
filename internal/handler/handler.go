@@ -65,7 +65,7 @@ func (h *Handler) SessionsMiddleware() gin.HandlerFunc {
 		MaxAge:   3600,
 		Secure:   true,
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteNoneMode,
 	})
 
 	return sessions.Sessions("oauth_session", store)

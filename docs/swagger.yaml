@@ -206,6 +206,35 @@ definitions:
         example: 06301788-e325-488f-94b5-1711e211b82a
         type: string
     type: object
+  model.YandexCallbackResponse:
+    description: Структура ответа с данными пользователя после успешной аутентификации
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        type: string
+      refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        type: string
+      user:
+        properties:
+          email:
+            example: user1@example.com
+            type: string
+          id:
+            example: 06301788-e325-488f-94b5-1711e211b82a
+            type: string
+          username:
+            example: user1
+            type: string
+        type: object
+    type: object
+  model.YandexLoginResponse:
+    description: Структура ответа с URL для перенаправления на Яндекс OAuth
+    properties:
+      url:
+        example: https://oauth.yandex.ru/authorize?response_type=code&client_id=1234567890&redirect_uri=http://localhost:8080/auth/yandex/callback&state=1234567890
+        type: string
+    type: object
 host: api.bookfoto.art
 info:
   contact: {}
@@ -398,7 +427,7 @@ paths:
         "200":
           description: Успешная аутентификация
           schema:
-            $ref: '#/definitions/model.TokenResponse'
+            $ref: '#/definitions/model.YandexCallbackResponse'
         "400":
           description: Неверные параметры
           schema:
@@ -418,8 +447,10 @@ paths:
       produces:
       - application/json
       responses:
-        "302":
+        "200":
           description: Перенаправление на Яндекс
+          schema:
+            $ref: '#/definitions/model.YandexLoginResponse'
       summary: Перенаправление на Яндекс OAuth
       tags:
       - Auth

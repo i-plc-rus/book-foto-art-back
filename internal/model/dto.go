@@ -19,6 +19,18 @@ type YandexLoginResponse struct {
 	URL string `json:"url" example:"https://oauth.yandex.ru/authorize?response_type=code&client_id=1234567890&redirect_uri=http://localhost:8080/auth/yandex/callback&state=1234567890"`
 }
 
+// YandexCallbackResponse представляет ответ с данными пользователя после успешной аутентификации
+// @Description Структура ответа с данными пользователя после успешной аутентификации
+type YandexCallbackResponse struct {
+	AccessToken  string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
+	RefreshToken string `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"`
+	User         struct {
+		ID       string `json:"id" example:"06301788-e325-488f-94b5-1711e211b82a"`
+		UserName string `json:"username" example:"user1"`
+		Email    string `json:"email" example:"user1@example.com"`
+	} `json:"user"`
+}
+
 // RefreshRequest содержит refresh токен для обновления access токена
 // @Description Структура запроса для обновления токена доступа
 type RefreshRequest struct {

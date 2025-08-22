@@ -288,7 +288,7 @@
                     "200": {
                         "description": "Успешная аутентификация",
                         "schema": {
-                            "$ref": "#/definitions/model.TokenResponse"
+                            "$ref": "#/definitions/model.YandexCallbackResponse"
                         }
                     },
                     "400": {
@@ -320,8 +320,11 @@
                 ],
                 "summary": "Перенаправление на Яндекс OAuth",
                 "responses": {
-                    "302": {
-                        "description": "Перенаправление на Яндекс"
+                    "200": {
+                        "description": "Перенаправление на Яндекс",
+                        "schema": {
+                            "$ref": "#/definitions/model.YandexLoginResponse"
+                        }
                     }
                 }
             }
@@ -1211,6 +1214,47 @@
                 "user_id": {
                     "type": "string",
                     "example": "06301788-e325-488f-94b5-1711e211b82a"
+                }
+            }
+        },
+        "model.YandexCallbackResponse": {
+            "description": "Структура ответа с данными пользователя после успешной аутентификации",
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                },
+                "refresh_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+                },
+                "user": {
+                    "type": "object",
+                    "properties": {
+                        "email": {
+                            "type": "string",
+                            "example": "user1@example.com"
+                        },
+                        "id": {
+                            "type": "string",
+                            "example": "06301788-e325-488f-94b5-1711e211b82a"
+                        },
+                        "username": {
+                            "type": "string",
+                            "example": "user1"
+                        }
+                    }
+                }
+            }
+        },
+        "model.YandexLoginResponse": {
+            "description": "Структура ответа с URL для перенаправления на Яндекс OAuth",
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "example": "https://oauth.yandex.ru/authorize?response_type=code\u0026client_id=1234567890\u0026redirect_uri=http://localhost:8080/auth/yandex/callback\u0026state=1234567890"
                 }
             }
         }

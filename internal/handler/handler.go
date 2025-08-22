@@ -7,9 +7,12 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -52,6 +55,11 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 		c.Set("user_id", userID.String())
 		c.Next()
 	}
+}
+
+func (h *Handler) SessionsMiddleware() gin.HandlerFunc {
+	store := cookie.NewStore([]byte(os.Getenv("SESSION_SECRET")))
+	return sessions.Sessions("oauth_session", store)
 }
 
 // Register godoc
@@ -124,9 +132,13 @@ func (h *Handler) Login(c *gin.Context) {
 // @Success      200 {object} model.YandexLoginResponse "Перенаправление на Яндекс"
 // @Router       /auth/yandex/login [get]
 func (h *Handler) YandexLogin(c *gin.Context) {
+	// Сохраняем state в сессию
 	state := uuid.New().String()
+	session := sessions.Default(c)
+	session.Set("oauth_state", state)
+	session.Save()
+
 	authURL := h.oauthService.GetAuthURL(state)
-	log.Printf("oauthService not nil: %v", h.oauthService != nil)
 	log.Printf("authURL: %s", authURL)
 	c.JSON(http.StatusOK, gin.H{"url": authURL})
 }
@@ -139,7 +151,7 @@ func (h *Handler) YandexLogin(c *gin.Context) {
 // @Produce      json
 // @Param        code query string true "Код авторизации от Яндекса"
 // @Param        state query string true "State параметр для безопасности"
-// @Success      200 {object} model.TokenResponse "Успешная аутентификация"
+// @Success      200 {object} model.YandexCallbackResponse "Успешная аутентификация"
 // @Failure      400 {object} model.ErrorMessage "Неверные параметры"
 // @Failure      401 {object} model.ErrorMessage "Ошибка аутентификации"
 // @Router       /auth/yandex/callback [get]
@@ -152,15 +164,15 @@ func (h *Handler) YandexCallback(c *gin.Context) {
 		return
 	}
 
-	// Проверяем state для безопасности
-	savedState, err := c.Cookie("oauth_state")
-	if err != nil || savedState != state {
+	// Проверяем state
+	session := sessions.Default(c)
+	savedState := session.Get("oauth_state")
+	if savedState != state || savedState == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid state parameter"})
 		return
 	}
-
-	// Очищаем cookie
-	c.SetCookie("oauth_state", "", -1, "/", "", false, true)
+	session.Delete("oauth_state")
+	session.Save()
 
 	// Обмениваем код на токен
 	token, err := h.oauthService.ExchangeCodeForToken(c.Request.Context(), code)

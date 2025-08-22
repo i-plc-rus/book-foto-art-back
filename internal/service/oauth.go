@@ -9,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/yandex"
 
 	"book-foto-art-back/internal/model"
 	"book-foto-art-back/internal/storage/postgres"
@@ -26,8 +25,11 @@ func NewYandexOAuthConfig() *oauth2.Config {
 		ClientID:     os.Getenv("YANDEX_CLIENT_ID"),
 		ClientSecret: os.Getenv("YANDEX_CLIENT_SECRET"),
 		RedirectURL:  os.Getenv("YANDEX_REDIRECT_URL"),
-		Scopes:       []string{"login:info", "login:email", "login:avatar"},
-		Endpoint:     yandex.Endpoint,
+		Scopes:       []string{"login:email"},
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  "https://oauth.yandex.ru/authorize",
+			TokenURL: "https://oauth.yandex.ru/token",
+		},
 	}
 }
 

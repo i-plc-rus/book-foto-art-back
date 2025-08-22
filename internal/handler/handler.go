@@ -121,13 +121,13 @@ func (h *Handler) Login(c *gin.Context) {
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
-// @Success      302 "Перенаправление на Яндекс"
+// @Success      200 {object} model.YandexLoginResponse "Перенаправление на Яндекс"
 // @Router       /auth/yandex/login [get]
 func (h *Handler) YandexLogin(c *gin.Context) {
 	state := uuid.New().String()
 	authURL := h.oauthService.GetAuthURL(state)
-	// c.SetCookie("oauth_state", state, 300, "/", "", false, true)
-	// c.Redirect(http.StatusTemporaryRedirect, authURL)
+	log.Printf("oauthService not nil: %v", h.oauthService != nil)
+	log.Printf("authURL: %s", authURL)
 	c.JSON(http.StatusOK, gin.H{"url": authURL})
 }
 

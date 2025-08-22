@@ -13,6 +13,12 @@ type ErrorMessage struct {
 	Error string `json:"error" example:"Invalid credentials"`
 }
 
+// YandexLoginResponse представляет ответ с URL для перенаправления на Яндекс OAuth
+// @Description Структура ответа с URL для перенаправления на Яндекс OAuth
+type YandexLoginResponse struct {
+	URL string `json:"url" example:"https://oauth.yandex.ru/authorize?response_type=code&client_id=1234567890&redirect_uri=http://localhost:8080/auth/yandex/callback&state=1234567890"`
+}
+
 // RefreshRequest содержит refresh токен для обновления access токена
 // @Description Структура запроса для обновления токена доступа
 type RefreshRequest struct {

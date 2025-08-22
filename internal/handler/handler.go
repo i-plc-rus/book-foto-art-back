@@ -5,15 +5,15 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
 )
 
@@ -55,20 +55,6 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 		c.Set("user_id", userID.String())
 		c.Next()
 	}
-}
-
-func (h *Handler) SessionsMiddleware() gin.HandlerFunc {
-	store := cookie.NewStore([]byte(os.Getenv("SESSION_SECRET")))
-	store.Options(sessions.Options{
-		Domain:   ".bookfoto.art",
-		Path:     "/",
-		MaxAge:   3600,
-		Secure:   true,
-		HttpOnly: true,
-		SameSite: http.SameSiteNoneMode,
-	})
-
-	return sessions.Sessions("oauth_session", store)
 }
 
 // Register godoc
@@ -141,14 +127,16 @@ func (h *Handler) Login(c *gin.Context) {
 // @Success      200 {object} model.YandexLoginResponse "Перенаправление на Яндекс"
 // @Router       /auth/yandex/login [get]
 func (h *Handler) YandexLogin(c *gin.Context) {
-	// Сохраняем state в сессию
-	state := uuid.New().String()
-	session := sessions.Default(c)
-	session.Set("oauth_state", state)
-	session.Save()
-
-	authURL := h.oauthService.GetAuthURL(state)
-	log.Printf("authURL: %s", authURL)
+	// Создаем JWT токен
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"exp": time.Now().Add(10 * time.Minute).Unix(),
+	})
+	tokenStr, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create token"})
+		return
+	}
+	authURL := h.oauthService.GetAuthURL(tokenStr)
 	c.JSON(http.StatusOK, gin.H{"url": authURL})
 }
 
@@ -166,33 +154,27 @@ func (h *Handler) YandexLogin(c *gin.Context) {
 // @Router       /auth/yandex/callback [get]
 func (h *Handler) YandexCallback(c *gin.Context) {
 	code := c.Query("code")
-	state := c.Query("state")
-
-	if code == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing authorization code"})
+	stateToken := c.Query("state")
+	if code == "" || stateToken == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing parameters"})
 		return
 	}
 
-	// Проверяем state
-	session := sessions.Default(c)
-	savedState := session.Get("oauth_state")
-
-	log.Printf("=== DEBUG SESSION ===")
-	log.Printf("Received state: %s", state)
-	log.Printf("Saved state from session: %v", savedState)
-	log.Printf("States match: %v", savedState == state)
-	log.Printf("Session ID: %v", session.Get("_session_id"))
-	log.Printf("====================")
-
-	if savedState != state || savedState == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid state parameter"})
+	// Проверяем JWT подпись и TTL
+	_, err := jwt.Parse(stateToken, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if err != nil {
+		log.Printf("Failed to parse JWT token: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid state token"})
 		return
 	}
-	session.Delete("oauth_state")
-	session.Save()
 
 	// Обмениваем код на токен
-	token, err := h.oauthService.ExchangeCodeForToken(c.Request.Context(), code)
+	oauthToken, err := h.oauthService.ExchangeCodeForToken(c.Request.Context(), code)
 	if err != nil {
 		log.Printf("Failed to exchange code for token: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to authenticate with Yandex"})
@@ -200,7 +182,7 @@ func (h *Handler) YandexCallback(c *gin.Context) {
 	}
 
 	// Получаем информацию о пользователе
-	yandexUser, err := h.oauthService.GetUserInfo(c.Request.Context(), token)
+	yandexUser, err := h.oauthService.GetUserInfo(c.Request.Context(), oauthToken)
 	if err != nil {
 		log.Printf("Failed to get user info: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get user info from Yandex"})

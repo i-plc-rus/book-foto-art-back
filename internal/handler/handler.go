@@ -126,8 +126,9 @@ func (h *Handler) Login(c *gin.Context) {
 func (h *Handler) YandexLogin(c *gin.Context) {
 	state := uuid.New().String()
 	authURL := h.oauthService.GetAuthURL(state)
-	c.SetCookie("oauth_state", state, 300, "/", "", false, true)
-	c.Redirect(http.StatusTemporaryRedirect, authURL)
+	// c.SetCookie("oauth_state", state, 300, "/", "", false, true)
+	// c.Redirect(http.StatusTemporaryRedirect, authURL)
+	c.JSON(http.StatusOK, gin.H{"url": authURL})
 }
 
 // YandexCallback godoc

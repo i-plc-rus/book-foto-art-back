@@ -61,13 +61,10 @@ func main() {
 		uploadService,
 	)
 
-	//r := gin.Default()
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 	r.Use(gin.Logger())
-	//r.Use(gin.Recovery())
 	r.Use(gin.CustomRecovery(func(c *gin.Context, recovered interface{}) {
-		// Логируем в консоль
 		if err, ok := recovered.(string); ok {
 			log.Printf("panic recovered: %s\n", err)
 		} else if err, ok := recovered.(error); ok {
@@ -75,7 +72,6 @@ func main() {
 		} else {
 			log.Printf("panic recovered: unknown error: %v\n", recovered)
 		}
-		// Отправляем 500 клиенту
 		c.AbortWithStatusJSON(500, gin.H{"error": "internal server error"})
 	}))
 
@@ -89,10 +85,12 @@ func main() {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	// Сессии для яндекс oauth
+	r.Use(h.SessionsMiddleware())
+
 	// Авторизация
 	auth := r.Group("/auth")
 	{
-		auth.Use(h.SessionsMiddleware())
 		auth.POST("/register", h.Register)
 		auth.POST("/login", h.Login)
 		auth.GET("/yandex/login", h.YandexLogin)

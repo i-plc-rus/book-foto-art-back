@@ -59,6 +59,15 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 
 func (h *Handler) SessionsMiddleware() gin.HandlerFunc {
 	store := cookie.NewStore([]byte(os.Getenv("SESSION_SECRET")))
+	store.Options(sessions.Options{
+		Domain:   ".bookfoto.art",
+		Path:     "/",
+		MaxAge:   3600,
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
 	return sessions.Sessions("oauth_session", store)
 }
 
@@ -167,6 +176,14 @@ func (h *Handler) YandexCallback(c *gin.Context) {
 	// Проверяем state
 	session := sessions.Default(c)
 	savedState := session.Get("oauth_state")
+
+	log.Printf("=== DEBUG SESSION ===")
+	log.Printf("Received state: %s", state)
+	log.Printf("Saved state from session: %v", savedState)
+	log.Printf("States match: %v", savedState == state)
+	log.Printf("Session ID: %v", session.Get("_session_id"))
+	log.Printf("====================")
+
 	if savedState != state || savedState == nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid state parameter"})
 		return

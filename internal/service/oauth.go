@@ -108,23 +108,18 @@ func (s *YandexOAuthService) AuthenticateOrCreateUser(ctx context.Context, yande
 	if username == "" {
 		username = yandexUser.Email
 	}
-	newUser := &model.User{
-		ID:       userID,
-		UserName: username,
-		Email:    yandexUser.Email,
-	}
-	if err := s.userStorage.CreateUser(ctx, *newUser); err != nil {
-		return nil, "", "", fmt.Errorf("failed to create user: %w", err)
-	}
-
-	// Генерируем токены для нового пользователя
 	accessToken, refreshToken, err := GenerateTokens(userID)
 	if err != nil {
 		return nil, "", "", fmt.Errorf("failed to generate tokens: %w", err)
 	}
-	err = s.userStorage.UpdateRefreshToken(ctx, userID, refreshToken)
-	if err != nil {
-		return nil, "", "", fmt.Errorf("failed to update refresh token: %w", err)
+	newUser := &model.User{
+		ID:           userID,
+		UserName:     username,
+		Email:        yandexUser.Email,
+		RefreshToken: refreshToken,
+	}
+	if err := s.userStorage.CreateUser(ctx, *newUser); err != nil {
+		return nil, "", "", fmt.Errorf("failed to create user: %w", err)
 	}
 
 	return newUser, accessToken, refreshToken, nil

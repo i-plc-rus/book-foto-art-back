@@ -14,9 +14,9 @@ type UserStorage struct {
 
 func (s *Storage) CreateUser(ctx context.Context, user model.User) error {
 	_, err := s.DB.Exec(ctx,
-		`INSERT INTO users (username, email, password)
-		 VALUES ($1, $2, $3)`,
-		user.UserName, user.Email, user.Password)
+		`INSERT INTO users (username, email, password, refresh_token)
+		 VALUES ($1, $2, $3, $4)`,
+		user.UserName, user.Email, user.Password, user.RefreshToken)
 	return err
 }
 

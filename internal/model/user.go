@@ -9,6 +9,4 @@ type User struct {
 	Password     string    `db:"password"`
 	RefreshToken string    `db:"refresh_token"`
 	ResetToken   string    `db:"reset_token"`
-	// OAuthProvider string    `db:"oauth_provider"`
-	// OAuthID       string    `db:"oauth_id"`
 }

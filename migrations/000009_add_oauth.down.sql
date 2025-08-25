@@ -1,3 +1,0 @@
-ALTER TABLE users
-DROP COLUMN IF EXISTS oauth_provider,
-DROP COLUMN IF EXISTS oauth_id;

@@ -95,6 +95,10 @@ func (s *YandexOAuthService) AuthenticateOrCreateUser(ctx context.Context, yande
 		if err != nil {
 			return nil, "", "", fmt.Errorf("failed to generate tokens: %w", err)
 		}
+		err = s.userStorage.UpdateRefreshToken(ctx, existingUser.ID, refreshToken)
+		if err != nil {
+			return nil, "", "", fmt.Errorf("failed to update refresh token: %w", err)
+		}
 		return existingUser, accessToken, refreshToken, nil
 	}
 
@@ -117,6 +121,10 @@ func (s *YandexOAuthService) AuthenticateOrCreateUser(ctx context.Context, yande
 	accessToken, refreshToken, err := GenerateTokens(userID)
 	if err != nil {
 		return nil, "", "", fmt.Errorf("failed to generate tokens: %w", err)
+	}
+	err = s.userStorage.UpdateRefreshToken(ctx, userID, refreshToken)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("failed to update refresh token: %w", err)
 	}
 
 	return newUser, accessToken, refreshToken, nil

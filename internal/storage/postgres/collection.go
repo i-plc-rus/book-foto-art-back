@@ -31,15 +31,20 @@ func (s *Storage) CreateCollection(ctx context.Context, col model.Collection) (*
 
 func (s *Storage) GetCollectionInfo(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) (*model.Collection, error) {
 	row := s.DB.QueryRow(ctx, `
-		SELECT c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url, c.cover_thumbnail_url, u.username, c.is_published
+		SELECT c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url,
+			   c.cover_thumbnail_url, u.username, c.is_published,
+		(SELECT COUNT(*) FROM uploaded_photos WHERE collection_id = c.id) AS count_photos
 		FROM collections c
 		JOIN users u ON c.user_id = u.id
-		WHERE c.user_id = $1 AND c.id = $2`, userID, collectionID,
+		WHERE c.user_id = $1 AND c.id = $2
+		GROUP BY c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url,
+                 c.cover_thumbnail_url, u.username, c.is_published
+		`, userID, collectionID,
 	)
 	var col model.Collection
 	if err := row.Scan(
 		&col.ID, &col.UserID, &col.Name, &col.Date, &col.CreatedAt, &col.CoverURL,
-		&col.CoverThumbnailURL, &col.UserName, &col.IsPublished); err != nil {
+		&col.CoverThumbnailURL, &col.UserName, &col.IsPublished, &col.CountPhotos); err != nil {
 		return nil, err
 	}
 	return &col, nil
@@ -47,19 +52,21 @@ func (s *Storage) GetCollectionInfo(ctx context.Context, userID uuid.UUID, colle
 
 func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID, searchParam string) ([]model.Collection, error) {
 	rows, err := s.DB.Query(ctx, `
-		SELECT c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url, c.cover_thumbnail_url, u.username, c.is_published
+		SELECT c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url,
+		c.cover_thumbnail_url, u.username, c.is_published,
+		(SELECT COUNT(*) FROM uploaded_photos WHERE collection_id = c.id) AS count_photos
 		FROM collections c
 		JOIN users u ON c.user_id = u.id
-        WHERE user_id = $1 AND ($2 = '' OR name ILIKE $3)
+        WHERE c.user_id = $1 AND ($2 = '' OR c.name ILIKE $3)
         ORDER BY
             CASE
                 WHEN $2 = '' THEN 1
-                WHEN name ILIKE $4 THEN 1  -- точное совпадение в начале
-                WHEN name ILIKE $5 THEN 2  -- совпадение в начале
-                ELSE 3                     -- совпадение в любом месте
+                WHEN c.name ILIKE $4 THEN 1  -- точное совпадение в начале
+                WHEN c.name ILIKE $5 THEN 2  -- совпадение в начале
+                ELSE 3                       -- совпадение в любом месте
             END,
-            date DESC
-		  `, userID, searchParam, "%"+searchParam+"%", searchParam+"%", "%"+searchParam+"%")
+            c.date DESC
+		`, userID, searchParam, "%"+searchParam+"%", searchParam+"%", "%"+searchParam+"%")
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +75,9 @@ func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID, searchPa
 	var collections []model.Collection
 	for rows.Next() {
 		var c model.Collection
-		err := rows.Scan(&c.ID, &c.UserID, &c.Name, &c.Date, &c.CreatedAt, &c.CoverURL, &c.CoverThumbnailURL, &c.UserName, &c.IsPublished)
+		err := rows.Scan(
+			&c.ID, &c.UserID, &c.Name, &c.Date, &c.CreatedAt, &c.CoverURL,
+			&c.CoverThumbnailURL, &c.UserName, &c.IsPublished, &c.CountPhotos)
 		if err != nil {
 			return nil, err
 		}

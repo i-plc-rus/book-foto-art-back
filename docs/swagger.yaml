@@ -8,6 +8,8 @@ definitions:
     type: object
   model.CollectionInfoResponse:
     properties:
+      count_photos:
+        type: integer
       cover_thumbnail_url:
         type: string
       cover_url:

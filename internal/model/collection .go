@@ -16,6 +16,7 @@ type Collection struct {
 	CoverThumbnailURL string    `json:"cover_thumbnail_url"`
 	UserName          string    `json:"username"`
 	IsPublished       bool      `json:"is_published"`
+	CountPhotos       uint      `json:"count_photos"`
 }
 
 type ShortLink struct {

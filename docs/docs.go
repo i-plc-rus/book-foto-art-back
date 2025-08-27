@@ -934,6 +934,9 @@ const docTemplate = `{
         "model.CollectionInfoResponse": {
             "type": "object",
             "properties": {
+                "count_photos": {
+                    "type": "integer"
+                },
                 "cover_thumbnail_url": {
                     "type": "string"
                 },

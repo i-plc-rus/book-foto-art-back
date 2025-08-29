@@ -623,6 +623,7 @@ func (h *Handler) GetShortLinkInfo(c *gin.Context) {
 	token := c.Param("token")
 	shortLink, err := h.collectionService.GetShortLinkInfo(c.Request.Context(), token)
 	if err != nil {
+		log.Printf("Failed to get short link info: %v\n", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get short link info"})
 		return
 	}

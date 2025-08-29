@@ -147,17 +147,27 @@ definitions:
       collection_id:
         example: 06301788-e325-488f-94b5-1711e211b82a
         type: string
+      cover_thumbnail_url:
+        type: string
+      cover_url:
+        type: string
       created_at:
         example: 2025-0715:12:00Z
         type: string
       id:
         example: 06301788-e325-488f-94b5-1711e211b82a
         type: string
+      name:
+        example: My Collection
+        type: string
       token:
         example: e325488f-94b5-1711e211b82a
         type: string
       url:
         example: https://book-foto-art.ru/s/e325488f-94b5-1711e211b82a
+        type: string
+      username:
+        example: user1
         type: string
     type: object
   model.TokenResponse:

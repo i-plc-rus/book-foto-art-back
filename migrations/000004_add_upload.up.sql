@@ -1,7 +1,7 @@
 CREATE TABLE uploaded_photos (
-    id BIGSERIAL PRIMARY KEY,
-    collection_id BIGINT NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
-    user_id BIGINT NOT NULL,
+    id UUID PRIMARY KEY,
+    collection_id UUID NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL,
     original_url TEXT NOT NULL,
     thumbnail_url TEXT NOT NULL,
     file_name TEXT NOT NULL,

@@ -313,13 +313,18 @@ func (s *Storage) UnpublishCollection(ctx context.Context, userID uuid.UUID, col
 
 func (s *Storage) GetShortLinkInfo(ctx context.Context, token string) (model.ShortLink, error) {
 	row := s.DB.QueryRow(ctx, `
-		SELECT id, collection_id, url, token, created_at, click_count
-		FROM short_links
-		WHERE token = $1
+    SELECT short_links.id, short_links.collection_id, short_links.url, short_links.token,
+           short_links.created_at, short_links.click_count, c.name, u.username,
+           c.cover_url, c.cover_thumbnail_url
+    FROM short_links
+    JOIN collections c ON short_links.collection_id = c.id
+    JOIN users u ON c.user_id = u.id
+    WHERE short_links.token = $1
 	`, token)
 	var shortLink model.ShortLink
 	if err := row.Scan(
-		&shortLink.ID, &shortLink.CollectionID, &shortLink.URL, &shortLink.Token, &shortLink.CreatedAt, &shortLink.ClickCount); err != nil {
+		&shortLink.ID, &shortLink.CollectionID, &shortLink.URL, &shortLink.Token, &shortLink.CreatedAt, &shortLink.ClickCount,
+		&shortLink.Name, &shortLink.UserName, &shortLink.CoverURL, &shortLink.CoverThumbnailURL); err != nil {
 		return model.ShortLink{}, err
 	}
 	return shortLink, nil

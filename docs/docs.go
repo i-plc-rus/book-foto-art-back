@@ -1135,6 +1135,12 @@ const docTemplate = `{
                     "type": "string",
                     "example": "06301788-e325-488f-94b5-1711e211b82a"
                 },
+                "cover_thumbnail_url": {
+                    "type": "string"
+                },
+                "cover_url": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string",
                     "example": "2025-0715:12:00Z"
@@ -1143,6 +1149,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "06301788-e325-488f-94b5-1711e211b82a"
                 },
+                "name": {
+                    "type": "string",
+                    "example": "My Collection"
+                },
                 "token": {
                     "type": "string",
                     "example": "e325488f-94b5-1711e211b82a"
@@ -1150,6 +1160,10 @@ const docTemplate = `{
                 "url": {
                     "type": "string",
                     "example": "https://book-foto-art.ru/s/e325488f-94b5-1711e211b82a"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "user1"
                 }
             }
         },

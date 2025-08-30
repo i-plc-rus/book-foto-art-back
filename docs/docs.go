@@ -798,7 +798,7 @@ const docTemplate = `{
         },
         "/public/collection/{token}/photos": {
             "get": {
-                "description": "Возвращает список фотографий в коллекции с возможностью сортировки.",
+                "description": "Возвращает публичную коллекцию по токену с возможностью сортировки.",
                 "consumes": [
                     "application/json"
                 ],
@@ -808,12 +808,12 @@ const docTemplate = `{
                 "tags": [
                     "Collection"
                 ],
-                "summary": "Получить фотографии публичной коллекции",
+                "summary": "Получить публичную коллекцию",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "ID коллекции",
-                        "name": "id",
+                        "description": "Токен короткой ссылки",
+                        "name": "token",
                         "in": "path",
                         "required": true
                     },
@@ -828,7 +828,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/model.CollectionPhotosResponse"
+                            "$ref": "#/definitions/model.PublicCollectionResponse"
                         }
                     },
                     "404": {
@@ -1065,6 +1065,38 @@ const docTemplate = `{
                 }
             }
         },
+        "model.PublicCollectionResponse": {
+            "type": "object",
+            "properties": {
+                "collection_name": {
+                    "type": "string"
+                },
+                "count_photos": {
+                    "type": "integer"
+                },
+                "cover_thumbnail_url": {
+                    "type": "string"
+                },
+                "cover_url": {
+                    "type": "string"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "photos": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.UploadedFile"
+                    }
+                },
+                "sort": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "model.PublishCollectionResponse": {
             "type": "object",
             "properties": {
@@ -1135,12 +1167,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "06301788-e325-488f-94b5-1711e211b82a"
                 },
-                "cover_thumbnail_url": {
-                    "type": "string"
-                },
-                "cover_url": {
-                    "type": "string"
-                },
                 "created_at": {
                     "type": "string",
                     "example": "2025-0715:12:00Z"
@@ -1149,10 +1175,6 @@ const docTemplate = `{
                     "type": "string",
                     "example": "06301788-e325-488f-94b5-1711e211b82a"
                 },
-                "name": {
-                    "type": "string",
-                    "example": "My Collection"
-                },
                 "token": {
                     "type": "string",
                     "example": "e325488f-94b5-1711e211b82a"
@@ -1160,10 +1182,6 @@ const docTemplate = `{
                 "url": {
                     "type": "string",
                     "example": "https://book-foto-art.ru/s/e325488f-94b5-1711e211b82a"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "user1"
                 }
             }
         },

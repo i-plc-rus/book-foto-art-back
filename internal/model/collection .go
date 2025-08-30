@@ -20,14 +20,10 @@ type Collection struct {
 }
 
 type ShortLink struct {
-	ID                uuid.UUID `json:"id"`
-	CollectionID      uuid.UUID `json:"collection_id"`
-	URL               string    `json:"url"`
-	Token             string    `json:"token"`
-	CreatedAt         time.Time `json:"created_at"`
-	ClickCount        uint      `json:"click_count"`
-	Name              string    `json:"name"`
-	UserName          string    `json:"username"`
-	CoverURL          string    `json:"cover_url"`
-	CoverThumbnailURL string    `json:"cover_thumbnail_url"`
+	ID           uuid.UUID `json:"id"`
+	CollectionID uuid.UUID `json:"collection_id"`
+	URL          string    `json:"url"`
+	Token        string    `json:"token"`
+	CreatedAt    time.Time `json:"created_at"`
+	ClickCount   uint      `json:"click_count"`
 }

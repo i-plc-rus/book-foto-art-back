@@ -111,20 +111,28 @@ func (s *CollectionService) GetPublicCollectionLink(ctx context.Context, token s
 	return link, nil
 }
 
-func (s *CollectionService) GetPublicCollectionPhotos(ctx context.Context, token string, sortParam string) (
-	[]model.UploadedPhoto, string, error) {
+func (s *CollectionService) GetPublicCollection(ctx context.Context, token string, sortParam string) (
+	*model.Collection, []model.UploadedPhoto, string, error) {
+
+	// Получаем информацию о публичной коллекции
+	collection, err := s.Postgres.GetPublicCollectionInfo(ctx, token)
+	if err != nil {
+		log.Printf("Storage ERROR: %v\n", err)
+		return nil, []model.UploadedPhoto{}, "", err
+	}
+
 	// Выбираем параметр сортировки
 	sort := shared.SortOption(sortParam)
 	if _, ok := shared.ValidSorts[sort]; !ok {
 		sort = shared.DefaultSort
 	}
-	// Получаем содержимое коллекции из БД
+	// Получаем фотографии коллекции из БД
 	photos, err := s.Postgres.GetPublicCollectionPhotos(ctx, token, sort)
 	if err != nil {
 		log.Printf("Storage ERROR: %v\n", err)
-		return []model.UploadedPhoto{}, "", err
+		return nil, []model.UploadedPhoto{}, "", err
 	}
-	return photos, string(sort), err
+	return collection, photos, string(sort), err
 }
 
 func (s *CollectionService) UnpublishCollection(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) error {

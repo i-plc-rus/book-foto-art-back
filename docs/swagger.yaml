@@ -98,6 +98,27 @@ definitions:
         example: 06301788-e325-488f-94b5-1711e211b82a
         type: string
     type: object
+  model.PublicCollectionResponse:
+    properties:
+      collection_name:
+        type: string
+      count_photos:
+        type: integer
+      cover_thumbnail_url:
+        type: string
+      cover_url:
+        type: string
+      date:
+        type: string
+      photos:
+        items:
+          $ref: '#/definitions/model.UploadedFile'
+        type: array
+      sort:
+        type: string
+      username:
+        type: string
+    type: object
   model.PublishCollectionResponse:
     properties:
       link:
@@ -147,27 +168,17 @@ definitions:
       collection_id:
         example: 06301788-e325-488f-94b5-1711e211b82a
         type: string
-      cover_thumbnail_url:
-        type: string
-      cover_url:
-        type: string
       created_at:
         example: 2025-0715:12:00Z
         type: string
       id:
         example: 06301788-e325-488f-94b5-1711e211b82a
         type: string
-      name:
-        example: My Collection
-        type: string
       token:
         example: e325488f-94b5-1711e211b82a
         type: string
       url:
         example: https://book-foto-art.ru/s/e325488f-94b5-1711e211b82a
-        type: string
-      username:
-        example: user1
         type: string
     type: object
   model.TokenResponse:
@@ -779,11 +790,11 @@ paths:
     get:
       consumes:
       - application/json
-      description: Возвращает список фотографий в коллекции с возможностью сортировки.
+      description: Возвращает публичную коллекцию по токену с возможностью сортировки.
       parameters:
-      - description: ID коллекции
+      - description: Токен короткой ссылки
         in: path
-        name: id
+        name: token
         required: true
         type: string
       - description: 'Сортировка. Возможные значения: uploaded_new (по дате загрузки,
@@ -799,12 +810,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/model.CollectionPhotosResponse'
+            $ref: '#/definitions/model.PublicCollectionResponse'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/model.ErrorMessage'
-      summary: Получить фотографии публичной коллекции
+      summary: Получить публичную коллекцию
       tags:
       - Collection
   /s/{token}:

@@ -514,7 +514,7 @@ func (h *Handler) PublishCollection(c *gin.Context) {
 // RedirectToPublicCollection godoc
 // @Summary      Перенаправление на публичную коллекцию
 // @Description  Перенаправляет на публичную коллекцию по токену
-// @Tags         Collection
+// @Tags         Public
 // @Accept       json
 // @Produce      json
 // @Param        token path string true "Токен короткой ссылки"
@@ -538,7 +538,7 @@ func (h *Handler) RedirectToPublicCollection(c *gin.Context) {
 // GetPublicCollection godoc
 // @Summary      Получить публичную коллекцию
 // @Description  Возвращает публичную коллекцию по токену с возможностью сортировки.
-// @Tags         Collection
+// @Tags         Public
 // @Accept       json
 // @Produce      json
 // @Param        token   path   string true  "Токен короткой ссылки"

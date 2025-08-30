@@ -143,14 +143,21 @@ type PublishCollectionResponse struct {
 }
 
 type ShortLinkInfoResponse struct {
-	ID                uuid.UUID `json:"id" example:"06301788-e325-488f-94b5-1711e211b82a"`
-	CollectionID      uuid.UUID `json:"collection_id" example:"06301788-e325-488f-94b5-1711e211b82a"`
-	URL               string    `json:"url" example:"https://book-foto-art.ru/s/e325488f-94b5-1711e211b82a"`
-	Token             string    `json:"token" example:"e325488f-94b5-1711e211b82a"`
-	CreatedAt         time.Time `json:"created_at" example:"2025-0715:12:00Z"`
-	ClickCount        uint      `json:"click_count" example:"100"`
-	Name              string    `json:"name" example:"My Collection"`
-	UserName          string    `json:"username" example:"user1"`
-	CoverURL          string    `json:"cover_url"`
-	CoverThumbnailURL string    `json:"cover_thumbnail_url"`
+	ID           uuid.UUID `json:"id" example:"06301788-e325-488f-94b5-1711e211b82a"`
+	CollectionID uuid.UUID `json:"collection_id" example:"06301788-e325-488f-94b5-1711e211b82a"`
+	URL          string    `json:"url" example:"https://book-foto-art.ru/s/e325488f-94b5-1711e211b82a"`
+	Token        string    `json:"token" example:"e325488f-94b5-1711e211b82a"`
+	CreatedAt    time.Time `json:"created_at" example:"2025-0715:12:00Z"`
+	ClickCount   uint      `json:"click_count" example:"100"`
+}
+
+type PublicCollectionResponse struct {
+	UserName          string         `json:"username"`
+	CollectionName    string         `json:"collection_name"`
+	Date              time.Time      `json:"date"`
+	CoverURL          string         `json:"cover_url"`
+	CoverThumbnailURL string         `json:"cover_thumbnail_url"`
+	CountPhotos       uint           `json:"count_photos"`
+	Photos            []UploadedFile `json:"photos"`
+	Sort              string         `json:"sort"`
 }

@@ -125,7 +125,7 @@ func main() {
 	}
 	public := r.Group("/public")
 	{
-		public.GET("collection/:token/photos", h.GetPublicCollectionPhotos)
+		public.GET("collection/:token/photos", h.GetPublicCollection)
 	}
 
 	// Загрузка файлов

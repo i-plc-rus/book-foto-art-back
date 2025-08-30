@@ -535,23 +535,24 @@ func (h *Handler) RedirectToPublicCollection(c *gin.Context) {
 	c.Redirect(http.StatusFound, link)
 }
 
-// GetPublicCollectionPhotos godoc
-// @Summary      Получить фотографии публичной коллекции
-// @Description  Возвращает список фотографий в коллекции с возможностью сортировки.
+// GetPublicCollection godoc
+// @Summary      Получить публичную коллекцию
+// @Description  Возвращает публичную коллекцию по токену с возможностью сортировки.
 // @Tags         Collection
 // @Accept       json
 // @Produce      json
-// @Param        id   path   string true  "ID коллекции"
+// @Param        token   path   string true  "Токен короткой ссылки"
 // @Param        sort query  string false "Сортировка. Возможные значения: uploaded_new (по дате загрузки, новые сверху), uploaded_old (по дате загрузки, старые сверху), name_az (по имени файла, A-Z), name_za (по имени файла, Z-A), random (случайный порядок). По умолчанию: uploaded_new"
-// @Success      200  {object} model.CollectionPhotosResponse
+// @Success      200  {object} model.PublicCollectionResponse
 // @Failure      404  {object} model.ErrorMessage
 // @Router       /public/collection/{token}/photos [get]
-func (h *Handler) GetPublicCollectionPhotos(c *gin.Context) {
+func (h *Handler) GetPublicCollection(c *gin.Context) {
 	// Получаем параметры из контекста и URL
 	token := c.Param("token")
 	sortParam := c.Query("sort")
 
-	photos, sort, err := h.collectionService.GetPublicCollectionPhotos(c.Request.Context(), token, sortParam)
+	collection, photos, sort, err := h.collectionService.GetPublicCollection(
+		c.Request.Context(), token, sortParam)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
@@ -562,8 +563,14 @@ func (h *Handler) GetPublicCollectionPhotos(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"files": photos,
-		"sort":  sort,
+		"username":            collection.UserName,
+		"collection_name":     collection.Name,
+		"date":                collection.Date,
+		"cover_url":           collection.CoverURL,
+		"cover_thumbnail_url": collection.CoverThumbnailURL,
+		"count_photos":        collection.CountPhotos,
+		"files":               photos,
+		"sort":                sort,
 	})
 }
 

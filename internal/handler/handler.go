@@ -538,7 +538,7 @@ func (h *Handler) RedirectToPublicCollection(c *gin.Context) {
 // GetPublicCollection godoc
 // @Summary      Получить публичную коллекцию
 // @Description  Возвращает публичную коллекцию по токену с возможностью сортировки.
-// @Tags         Public
+// @Tags         Collection
 // @Accept       json
 // @Produce      json
 // @Param        token   path   string true  "Токен короткой ссылки"

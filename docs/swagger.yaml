@@ -817,7 +817,7 @@ paths:
             $ref: '#/definitions/model.ErrorMessage'
       summary: Получить публичную коллекцию
       tags:
-      - Public
+      - Collection
   /s/{token}:
     get:
       consumes:

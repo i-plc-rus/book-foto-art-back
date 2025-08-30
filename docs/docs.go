@@ -806,7 +806,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Public"
+                    "Collection"
                 ],
                 "summary": "Получить публичную коллекцию",
                 "parameters": [

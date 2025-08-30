@@ -817,7 +817,7 @@ paths:
             $ref: '#/definitions/model.ErrorMessage'
       summary: Получить публичную коллекцию
       tags:
-      - Collection
+      - Public
   /s/{token}:
     get:
       consumes:
@@ -840,7 +840,7 @@ paths:
             $ref: '#/definitions/model.ErrorMessage'
       summary: Перенаправление на публичную коллекцию
       tags:
-      - Collection
+      - Public
   /upload/files:
     post:
       consumes:

@@ -97,6 +97,7 @@ type CollectionInfoResponse struct {
 	CoverThumbnailURL string `json:"cover_thumbnail_url"`
 	UserName          string `json:"username"`
 	IsPublished       bool   `json:"is_published"`
+	ShortLinkURL      string `json:"short_link_url"`
 	CountPhotos       uint   `json:"count_photos"`
 }
 

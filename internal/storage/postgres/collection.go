@@ -31,20 +31,20 @@ func (s *Storage) CreateCollection(ctx context.Context, col model.Collection) (*
 
 func (s *Storage) GetCollectionInfo(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID) (*model.Collection, error) {
 	row := s.DB.QueryRow(ctx, `
-		SELECT c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url,
-			   c.cover_thumbnail_url, u.username, c.is_published,
-		(SELECT COUNT(*) FROM uploaded_photos WHERE collection_id = c.id) AS count_photos
+		SELECT c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url, c.cover_thumbnail_url,
+		       u.username, c.is_published, COALESCE(s.url, '') AS url,
+			   (SELECT COUNT(*) FROM uploaded_photos WHERE collection_id = c.id) AS count_photos
 		FROM collections c
-		JOIN users u ON c.user_id = u.id
+		LEFT JOIN users u ON c.user_id = u.id
+		LEFT JOIN short_links s ON c.id = s.collection_id
 		WHERE c.user_id = $1 AND c.id = $2
-		GROUP BY c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url,
-                 c.cover_thumbnail_url, u.username, c.is_published
 		`, userID, collectionID,
 	)
 	var col model.Collection
 	if err := row.Scan(
 		&col.ID, &col.UserID, &col.Name, &col.Date, &col.CreatedAt, &col.CoverURL,
-		&col.CoverThumbnailURL, &col.UserName, &col.IsPublished, &col.CountPhotos); err != nil {
+		&col.CoverThumbnailURL, &col.UserName, &col.IsPublished, &col.ShortLinkURL,
+		&col.CountPhotos); err != nil {
 		return nil, err
 	}
 	return &col, nil
@@ -53,10 +53,11 @@ func (s *Storage) GetCollectionInfo(ctx context.Context, userID uuid.UUID, colle
 func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID, searchParam string) ([]model.Collection, error) {
 	rows, err := s.DB.Query(ctx, `
 		SELECT c.id, c.user_id, c.name, c.date, c.created_at, c.cover_url,
-		c.cover_thumbnail_url, u.username, c.is_published,
+		c.cover_thumbnail_url, u.username, c.is_published, COALESCE(s.url, '') AS url,
 		(SELECT COUNT(*) FROM uploaded_photos WHERE collection_id = c.id) AS count_photos
 		FROM collections c
-		JOIN users u ON c.user_id = u.id
+		LEFT JOIN users u ON c.user_id = u.id
+		LEFT JOIN short_links s ON c.id = s.collection_id
         WHERE c.user_id = $1 AND ($2 = '' OR c.name ILIKE $3)
         ORDER BY
             CASE
@@ -77,7 +78,8 @@ func (s *Storage) GetCollections(ctx context.Context, userID uuid.UUID, searchPa
 		var c model.Collection
 		err := rows.Scan(
 			&c.ID, &c.UserID, &c.Name, &c.Date, &c.CreatedAt, &c.CoverURL,
-			&c.CoverThumbnailURL, &c.UserName, &c.IsPublished, &c.CountPhotos)
+			&c.CoverThumbnailURL, &c.UserName, &c.IsPublished, &c.ShortLinkURL,
+			&c.CountPhotos)
 		if err != nil {
 			return nil, err
 		}

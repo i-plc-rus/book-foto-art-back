@@ -410,6 +410,7 @@ func (h *Handler) GetCollectionInfo(c *gin.Context) {
 
 	collection, err := h.collectionService.GetCollectionInfo(c.Request.Context(), userID, collectionID)
 	if err != nil {
+		log.Printf("Failed to get collection info: %v\n", err)
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
 		} else {

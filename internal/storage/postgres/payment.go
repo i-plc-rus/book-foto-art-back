@@ -16,12 +16,12 @@ type PaymentStorage struct {
 
 func (s *Storage) CreatePayment(ctx context.Context, payment *model.Payment) error {
 	query := `
-		INSERT INTO payments (id, user_id, yookassa_payment_id, amount, status, created_at)
+		INSERT INTO payments (id, user_id, yookassa_payment_id, plan, amount, status, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
 	`
 	res, err := s.DB.Exec(
 		ctx, query, payment.ID, payment.UserID, payment.YooKassaPaymentID,
-		payment.Amount, payment.Status, payment.CreatedAt,
+		payment.Plan, payment.Amount, payment.Status, payment.CreatedAt,
 	)
 	if err != nil {
 		return err
@@ -35,13 +35,13 @@ func (s *Storage) CreatePayment(ctx context.Context, payment *model.Payment) err
 
 func (s *Storage) GetPayment(ctx context.Context, userID uuid.UUID, paymentID string) (*model.Payment, error) {
 	query := `
-		SELECT id, user_id, yookassa_payment_id, amount, status, created_at, updated_at
+		SELECT id, user_id, yookassa_payment_id, plan, amount, status, created_at, updated_at
 		FROM payments
 		WHERE id = $1 AND user_id = $2
 	`
 	var payment model.Payment
 	err := s.DB.QueryRow(ctx, query, paymentID, userID).Scan(
-		&payment.ID, &payment.UserID, &payment.YooKassaPaymentID, &payment.Amount,
+		&payment.ID, &payment.UserID, &payment.YooKassaPaymentID, &payment.Plan, &payment.Amount,
 		&payment.Status, &payment.CreatedAt, &payment.UpdatedAt,
 	)
 	if err != nil {

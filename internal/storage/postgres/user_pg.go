@@ -97,7 +97,6 @@ func (s *Storage) UpdateUserSubscription(ctx context.Context, yookassaPaymentID 
 		plan    string
 		addDays time.Duration
 	)
-
 	query := `
 		SELECT user_id, plan
 		FROM payments

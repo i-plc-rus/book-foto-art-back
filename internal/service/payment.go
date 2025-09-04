@@ -38,8 +38,8 @@ func NewPaymentService(storage *postgres.Storage) *PaymentService {
 // type Plan string
 
 var subscriptionPlans = map[string]float64{
-	"month": 190.00,
-	"year":  1990.00,
+	"month": 299.00,
+	"year":  1943.00,
 }
 
 func (s *PaymentService) CreatePayment(ctx context.Context, userID uuid.UUID, plan string) (string, error) {

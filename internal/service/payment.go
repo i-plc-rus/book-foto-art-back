@@ -4,9 +4,6 @@ import (
 	"book-foto-art-back/internal/model"
 	"book-foto-art-back/internal/storage/postgres"
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"os"
@@ -115,26 +112,6 @@ func (s *PaymentService) CreatePayment(ctx context.Context, userID uuid.UUID, pl
 
 func (s *PaymentService) GetPayment(ctx context.Context, userID uuid.UUID, paymentID string) (*model.Payment, error) {
 	return s.storage.GetPayment(ctx, userID, paymentID)
-}
-
-func (s *PaymentService) VerifyWebhook(body []byte, signature string) bool {
-	// HMAC-SHA256 от тела запроса с использованием секретного ключа
-	secretKey := os.Getenv("YOOKASSA_SECRET_KEY")
-
-	// Декодируем подпись из base64
-	signatureBytes, err := base64.StdEncoding.DecodeString(signature)
-	if err != nil {
-		log.Printf("Failed to decode signature: %v", err)
-		return false
-	}
-
-	// Создаем HMAC с секретным ключом
-	h := hmac.New(sha256.New, []byte(secretKey))
-	h.Write(body)
-	expectedSignature := h.Sum(nil)
-
-	// Сравниваем подписи
-	return hmac.Equal(signatureBytes, expectedSignature)
 }
 
 func (s *PaymentService) ProcessWebhook(ctx context.Context, event map[string]interface{}) error {

@@ -793,6 +793,82 @@
                 }
             }
         },
+        "/profile/subscription/extend": {
+            "post": {
+                "description": "Создаёт платеж для оплаты подписки",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Создать платеж",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "План подписки (месяц, год)",
+                        "name": "plan",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.CreatePaymentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    }
+                }
+            }
+        },
+        "/profile/subscription/result/{payment_id}": {
+            "get": {
+                "description": "Получает статус платежа по ID. Возможные статусы: pending (ожидает оплаты), succeeded (успешно оплачен), canceled (отменен)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Получить статус платежа",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID платежа",
+                        "name": "payment_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.PaymentStatusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    }
+                }
+            }
+        },
         "/public/collection/{token}/photos": {
             "get": {
                 "description": "Возвращает публичную коллекцию по токену с возможностью сортировки.",
@@ -1019,6 +1095,15 @@
                 }
             }
         },
+        "model.CreatePaymentResponse": {
+            "type": "object",
+            "properties": {
+                "confirmation_url": {
+                    "type": "string",
+                    "example": "https://yoomoney.ru/checkout/payments/v2/contract?orderId=304b552c-000f-5000-b000-1355c1d6c469"
+                }
+            }
+        },
         "model.ErrorMessage": {
             "description": "Структура для сообщений об ошибках API",
             "type": "object",
@@ -1049,6 +1134,15 @@
                 "password": {
                     "type": "string",
                     "example": "password123"
+                }
+            }
+        },
+        "model.PaymentStatusResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "example": "succeeded"
                 }
             }
         },

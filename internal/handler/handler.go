@@ -62,34 +62,34 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// func (h *Handler) SubscriptionMiddleware() gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		userIDStr := c.GetString("user_id")
-// 		userID, err := uuid.Parse(userIDStr)
-// 		if err != nil {
-// 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
-// 			c.Abort()
-// 			return
-// 		}
-// 		active, err := h.subscriptionService.CheckSubscription(c.Request.Context(), userID)
-// 		if err != nil {
-// 			log.Printf("Failed to check subscription: %v", err)
-// 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check subscription"})
-// 			c.Abort()
-// 			return
-// 		}
-// 		if !active {
-// 			c.JSON(http.StatusPaymentRequired, gin.H{
-// 				"error":       "Subscription required",
-// 				"message":     "Для использования сервиса необходима активная подписка",
-// 				"payment_url": os.Getenv("FRONTEND_URL") + "/subscription",
-// 			})
-// 			c.Abort()
-// 			return
-// 		}
-// 		c.Next()
-// 	}
-// }
+func (h *Handler) SubscriptionMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userIDStr := c.GetString("user_id")
+		userID, err := uuid.Parse(userIDStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+			c.Abort()
+			return
+		}
+		active, _, _, err := h.userService.GetUserSubscriptionInfo(c.Request.Context(), userID)
+		if err != nil {
+			log.Printf("Failed to check subscription: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check subscription"})
+			c.Abort()
+			return
+		}
+		if !active {
+			c.JSON(http.StatusPaymentRequired, gin.H{
+				"error":       "Subscription required",
+				"message":     "Для использования сервиса необходима активная подписка",
+				"payment_url": os.Getenv("FRONTEND_URL"),
+			})
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
 
 // Register godoc
 // @Summary      Регистрация нового пользователя
@@ -367,6 +367,16 @@ func (h *Handler) GetProfile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": user.ID, "email": user.Email})
 }
 
+// CreatePayment godoc
+// @Summary      Создать платеж
+// @Description  Создаёт платеж для оплаты подписки
+// @Tags         Profile
+// @Accept       json
+// @Produce      json
+// @Param        plan formData string true "План подписки (месяц, год)"
+// @Success      200 {object} model.CreatePaymentResponse
+// @Failure      400 {object} model.ErrorMessage
+// @Router       /profile/subscription/extend [post]
 func (h *Handler) CreatePayment(c *gin.Context) {
 	userIDStr := c.GetString("user_id")
 	userID, err := uuid.Parse(userIDStr)
@@ -388,6 +398,16 @@ func (h *Handler) CreatePayment(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"confirmation_url": confirmationURL})
 }
 
+// GetPaymentStatus godoc
+// @Summary      Получить статус платежа
+// @Description  Получает статус платежа по ID. Возможные статусы: pending (ожидает оплаты), succeeded (успешно оплачен), canceled (отменен)
+// @Tags         Profile
+// @Accept       json
+// @Produce      json
+// @Param        payment_id path string true "ID платежа"
+// @Success      200 {object} model.PaymentStatusResponse
+// @Failure      400 {object} model.ErrorMessage
+// @Router       /profile/subscription/result/{payment_id} [get]
 func (h *Handler) GetPaymentStatus(c *gin.Context) {
 	userIDStr := c.GetString("user_id")
 	userID, err := uuid.Parse(userIDStr)

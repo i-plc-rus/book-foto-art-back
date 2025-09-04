@@ -3,6 +3,7 @@ package postgres
 import (
 	"book-foto-art-back/internal/model"
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,9 +16,9 @@ type UserStorage struct {
 
 func (s *Storage) CreateUser(ctx context.Context, user model.User) error {
 	_, err := s.DB.Exec(ctx,
-		`INSERT INTO users (username, email, password, refresh_token)
-		 VALUES ($1, $2, $3, $4)`,
-		user.UserName, user.Email, user.Password, user.RefreshToken)
+		`INSERT INTO users (username, email, password, refresh_token, subscription_active, subscription_expires_at)
+		 VALUES ($1, $2, $3, $4, $5, $6)`,
+		user.UserName, user.Email, user.Password, user.RefreshToken, user.SubscriptionActive, user.SubscriptionExpiresAt)
 	return err
 }
 
@@ -91,7 +92,7 @@ func (s *Storage) UpdateRefreshToken(ctx context.Context, id uuid.UUID, refreshT
 	return err
 }
 
-func (s *Storage) UpdateUserSubscription(ctx context.Context, yookassaPaymentID string, active bool) error {
+func (s *Storage) ExtendUserSubscription(ctx context.Context, yookassaPaymentID string, active bool) error {
 	var (
 		userID  uuid.UUID
 		plan    string
@@ -114,43 +115,60 @@ func (s *Storage) UpdateUserSubscription(ctx context.Context, yookassaPaymentID 
 		addDays = time.Hour * 24 * 365
 	}
 
-	_, err = s.DB.Exec(ctx,
+	res, err := s.DB.Exec(ctx,
 		`UPDATE users
-		 SET subscription_active = $1, subscription_expires_at = subscription_expires_at + $2
+		 SET subscription_active = $1,
+		     subscription_expires_at = COALESCE(
+		        GREATEST(subscription_expires_at, NOW()) + $2,
+				NOW() + $2
+			 )
 		 WHERE id = $3`,
 		active, addDays, userID)
+	resAffected := res.RowsAffected()
+	if resAffected == 0 {
+		return sql.ErrNoRows
+	}
 	return err
 }
 
-// func (s *Storage) GetUserSubscriptionStatus(ctx context.Context, userID uuid.UUID) (*model.SubscriptionStatus, error) {
-// 	query := `
-// 		SELECT subscription_active, subscription_expires_at
-// 		FROM users
-// 		WHERE id = $1`
+func (s *Storage) GetUserSubscriptionInfo(ctx context.Context, userID uuid.UUID) (bool, *time.Time, uint, error) {
+	var (
+		isActive  bool
+		expiresAt *time.Time
+		daysLeft  uint
+	)
+	query := `
+		SELECT subscription_active, subscription_expires_at
+		FROM users
+		WHERE id = $1
+	`
+	err := s.DB.QueryRow(ctx, query, userID).Scan(&isActive, &expiresAt)
+	if err != nil {
+		return false, nil, 0, err
+	}
+	if expiresAt != nil {
+		isActive = time.Now().Before(*expiresAt)
+		if isActive {
+			daysLeft = uint(time.Until(*expiresAt).Hours() / 24)
+		} else {
+			_ = s.UpdateUserSubscriptionStatus(ctx, userID, false)
+		}
+	}
+	return isActive, expiresAt, daysLeft, nil
+}
 
-// 	var active bool
-// 	var expiresAt *time.Time
-// 	err := s.DB.QueryRow(ctx, query, userID).Scan(&active, &expiresAt)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	status := &model.SubscriptionStatus{
-// 		Active:    active,
-// 		ExpiresAt: time.Time{},
-// 		DaysLeft:  0,
-// 		IsExpired: true,
-// 	}
-
-// 	if expiresAt != nil {
-// 		status.ExpiresAt = *expiresAt
-// 		status.IsExpired = time.Now().After(*expiresAt)
-// 		if !status.IsExpired {
-// 			status.DaysLeft = int(expiresAt.Sub(time.Now()).Hours() / 24)
-// 		}
-// 	}
-
-// 	status.Active = active && !status.IsExpired
-
-// 	return status, nil
-// }
+func (s *Storage) UpdateUserSubscriptionStatus(ctx context.Context, userID uuid.UUID, active bool) error {
+	res, err := s.DB.Exec(ctx,
+		`UPDATE users
+		 SET subscription_active = $1
+		 WHERE id = $2`,
+		active, userID)
+	if err != nil {
+		return err
+	}
+	rowsAffected := res.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return err
+}

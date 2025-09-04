@@ -411,10 +411,11 @@ func (h *Handler) YoomoneyWebhook(c *gin.Context) {
 		return
 	}
 
-	// Проверяем подпись webhook'а
-	signature := c.GetHeader("X-Content-HMAC")
-	if !h.paymentService.VerifyWebhook(body, signature) {
-		log.Printf("Invalid webhook signature\n")
+	// Проверяем IP-адрес
+	clientIP := c.ClientIP()
+	if !h.isValidYooKassaIP(clientIP) {
+		log.Printf("Invalid IP address: %s\n", clientIP)
+		c.JSON(http.StatusForbidden, gin.H{"error": "Invalid IP address"})
 		return
 	}
 
@@ -966,4 +967,23 @@ func (h *Handler) UpdateCollectionCover(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+// Проверка IP-адреса YooKassa
+func (h *Handler) isValidYooKassaIP(ip string) bool {
+	validIPs := []string{
+		"185.71.76.0/27",
+		"185.71.77.0/27",
+		"77.75.153.0/25",
+		"77.75.156.11",
+		"77.75.156.35",
+		"77.75.154.128/25",
+		"2a02:5180::/32",
+	}
+	for _, validIP := range validIPs {
+		if ip == validIP {
+			return true
+		}
+	}
+	return false
 }

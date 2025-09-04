@@ -120,13 +120,21 @@ func (s *PaymentService) GetPayment(ctx context.Context, userID uuid.UUID, payme
 func (s *PaymentService) VerifyWebhook(body []byte, signature string) bool {
 	// HMAC-SHA256 от тела запроса с использованием секретного ключа
 	secretKey := os.Getenv("YOOKASSA_SECRET_KEY")
-	if secretKey == "" {
+
+	// Декодируем подпись из base64
+	signatureBytes, err := base64.StdEncoding.DecodeString(signature)
+	if err != nil {
+		log.Printf("Failed to decode signature: %v", err)
 		return false
 	}
+
+	// Создаем HMAC с секретным ключом
 	h := hmac.New(sha256.New, []byte(secretKey))
 	h.Write(body)
-	expectedSignature := base64.StdEncoding.EncodeToString(h.Sum(nil))
-	return hmac.Equal([]byte(signature), []byte(expectedSignature))
+	expectedSignature := h.Sum(nil)
+
+	// Сравниваем подписи
+	return hmac.Equal(signatureBytes, expectedSignature)
 }
 
 func (s *PaymentService) ProcessWebhook(ctx context.Context, event map[string]interface{}) error {

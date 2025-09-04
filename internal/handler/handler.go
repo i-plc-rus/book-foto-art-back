@@ -412,9 +412,9 @@ func (h *Handler) YoomoneyWebhook(c *gin.Context) {
 	}
 
 	// Проверяем подпись webhook'а
-	signature := c.GetHeader("X-YooMoney-Signature")
+	signature := c.GetHeader("X-Content-HMAC")
 	if !h.paymentService.VerifyWebhook(body, signature) {
-		log.Printf("Invalid signature webhook signature\n")
+		log.Printf("Invalid webhook signature\n")
 		return
 	}
 

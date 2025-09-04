@@ -40,10 +40,12 @@ func (s *UserService) Register(ctx context.Context, username, email, password st
 
 	// Создаём пользователя в БД
 	u := model.User{
-		UserName:     username,
-		Email:        email,
-		Password:     string(hash),
-		RefreshToken: "",
+		UserName:              username,
+		Email:                 email,
+		Password:              string(hash),
+		RefreshToken:          "",
+		SubscriptionActive:    true,
+		SubscriptionExpiresAt: time.Now().Add(time.Hour * 24 * 30),
 	}
 	if err := s.Storage.CreateUser(ctx, u); err != nil {
 		return "", "", err
@@ -154,6 +156,10 @@ func (s *UserService) ResetPassword(ctx context.Context, resetToken, newPassword
 
 func (s *UserService) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	return s.Storage.GetUserByID(ctx, id)
+}
+
+func (s *UserService) GetUserSubscriptionInfo(ctx context.Context, userID uuid.UUID) (bool, *time.Time, uint, error) {
+	return s.Storage.GetUserSubscriptionInfo(ctx, userID)
 }
 
 // --- JWT helper ---

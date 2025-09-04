@@ -68,6 +68,12 @@ definitions:
         example: 06301788-e325-488f-94b5-1711e211b82a
         type: string
     type: object
+  model.CreatePaymentResponse:
+    properties:
+      confirmation_url:
+        example: https://yoomoney.ru/checkout/payments/v2/contract?orderId=304b552c-000f-5000-b000-1355c1d6c469
+        type: string
+    type: object
   model.ErrorMessage:
     description: Структура для сообщений об ошибках API
     properties:
@@ -89,6 +95,12 @@ definitions:
         type: string
       password:
         example: password123
+        type: string
+    type: object
+  model.PaymentStatusResponse:
+    properties:
+      status:
+        example: succeeded
         type: string
     type: object
   model.ProfileResponse:
@@ -786,6 +798,57 @@ paths:
           schema:
             $ref: '#/definitions/model.ErrorMessage'
       summary: Получить профиль пользователя
+      tags:
+      - Profile
+  /profile/subscription/extend:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт платеж для оплаты подписки
+      parameters:
+      - description: План подписки (месяц, год)
+        in: formData
+        name: plan
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.CreatePaymentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Создать платеж
+      tags:
+      - Profile
+  /profile/subscription/result/{payment_id}:
+    get:
+      consumes:
+      - application/json
+      description: 'Получает статус платежа по ID. Возможные статусы: pending (ожидает
+        оплаты), succeeded (успешно оплачен), canceled (отменен)'
+      parameters:
+      - description: ID платежа
+        in: path
+        name: payment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.PaymentStatusResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Получить статус платежа
       tags:
       - Profile
   /public/collection/{token}/photos:

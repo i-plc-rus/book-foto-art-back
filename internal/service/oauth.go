@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
@@ -107,10 +108,12 @@ func (s *YandexOAuthService) AuthenticateOrCreateUser(ctx context.Context, yande
 		return nil, "", "", fmt.Errorf("failed to generate tokens: %w", err)
 	}
 	newUser := &model.User{
-		ID:           userID,
-		UserName:     username,
-		Email:        yandexUser.Email,
-		RefreshToken: refreshToken,
+		ID:                    userID,
+		UserName:              username,
+		Email:                 yandexUser.Email,
+		RefreshToken:          refreshToken,
+		SubscriptionActive:    true,
+		SubscriptionExpiresAt: time.Now().Add(time.Hour * 24 * 30),
 	}
 	if err := s.userStorage.CreateUser(ctx, *newUser); err != nil {
 		return nil, "", "", fmt.Errorf("failed to create user: %w", err)

@@ -162,3 +162,11 @@ type PublicCollectionResponse struct {
 	Photos            []UploadedFile `json:"photos"`
 	Sort              string         `json:"sort"`
 }
+
+type CreatePaymentResponse struct {
+	ConfirmationURL string `json:"confirmation_url" example:"https://yoomoney.ru/checkout/payments/v2/contract?orderId=304b552c-000f-5000-b000-1355c1d6c469"`
+}
+
+type PaymentStatusResponse struct {
+	Status string `json:"status" example:"succeeded"`
+}

@@ -118,7 +118,7 @@ func main() {
 	collection := r.Group("/collection")
 	{
 		collection.Use(h.AuthMiddleware())
-		// collection.Use(h.SubscriptionMiddleware())
+		collection.Use(h.SubscriptionMiddleware())
 		collection.POST("/create", h.CreateCollection)
 		collection.GET("/list", h.ListCollections)
 		collection.GET("/:id", h.GetCollectionInfo)

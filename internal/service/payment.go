@@ -137,7 +137,7 @@ func (s *PaymentService) ProcessWebhook(ctx context.Context, event map[string]in
 		return nil
 	case "succeeded":
 		log.Printf("payment's %s status is %s\n", yookassaPaymentID, status)
-		err := s.storage.UpdateUserSubscription(ctx, yookassaPaymentID, true)
+		err := s.storage.ExtendUserSubscription(ctx, yookassaPaymentID, true)
 		if err != nil {
 			return err
 		}

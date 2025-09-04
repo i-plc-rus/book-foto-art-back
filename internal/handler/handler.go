@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -980,9 +981,27 @@ func (h *Handler) isValidYooKassaIP(ip string) bool {
 		"77.75.154.128/25",
 		"2a02:5180::/32",
 	}
+
+	clientIP := net.ParseIP(ip)
+	if clientIP == nil {
+		return false
+	}
+
 	for _, validIP := range validIPs {
-		if ip == validIP {
-			return true
+		// Проверяем, является ли это CIDR-блоком
+		if strings.Contains(validIP, "/") {
+			_, network, err := net.ParseCIDR(validIP)
+			if err != nil {
+				continue
+			}
+			if network.Contains(clientIP) {
+				return true
+			}
+		} else {
+			// Обычный IP-адрес
+			if ip == validIP {
+				return true
+			}
 		}
 	}
 	return false

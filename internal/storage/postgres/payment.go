@@ -17,7 +17,7 @@ type PaymentStorage struct {
 func (s *Storage) CreatePayment(ctx context.Context, payment *model.Payment) error {
 	query := `
 		INSERT INTO payments (id, user_id, yookassa_payment_id, plan, amount, status, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 	res, err := s.DB.Exec(
 		ctx, query, payment.ID, payment.UserID, payment.YooKassaPaymentID,

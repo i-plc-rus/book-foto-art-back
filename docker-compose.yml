@@ -32,6 +32,8 @@ services:
       - YANDEX_CLIENT_ID=8e3396b3966c421db32bca11586e4f7f
       - YANDEX_CLIENT_SECRET=7cf1c0a122024f28a037261fa5e766f0
       - YANDEX_REDIRECT_URL=https://bookfoto.art/verification
+      - YOOKASSA_SHOP_ID=1157646
+      - YOOKASSA_SECRET_KEY=test_Lu8T9GwRt--9Lt0wOzdqnud6C3Gz3K3fqs9cnaf7Mm4
     networks:
       - app-net
 

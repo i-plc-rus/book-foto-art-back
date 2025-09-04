@@ -107,13 +107,14 @@ func (s *YandexOAuthService) AuthenticateOrCreateUser(ctx context.Context, yande
 	if err != nil {
 		return nil, "", "", fmt.Errorf("failed to generate tokens: %w", err)
 	}
+	expiresAt := time.Now().Add(time.Hour * 24 * 30)
 	newUser := &model.User{
 		ID:                    userID,
 		UserName:              username,
 		Email:                 yandexUser.Email,
 		RefreshToken:          refreshToken,
 		SubscriptionActive:    true,
-		SubscriptionExpiresAt: time.Now().Add(time.Hour * 24 * 30),
+		SubscriptionExpiresAt: &expiresAt,
 	}
 	if err := s.userStorage.CreateUser(ctx, *newUser); err != nil {
 		return nil, "", "", fmt.Errorf("failed to create user: %w", err)

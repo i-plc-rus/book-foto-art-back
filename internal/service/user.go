@@ -39,13 +39,14 @@ func (s *UserService) Register(ctx context.Context, username, email, password st
 	}
 
 	// Создаём пользователя в БД
+	expiresAt := time.Now().Add(time.Hour * 24 * 30)
 	u := model.User{
 		UserName:              username,
 		Email:                 email,
 		Password:              string(hash),
 		RefreshToken:          "",
 		SubscriptionActive:    true,
-		SubscriptionExpiresAt: time.Now().Add(time.Hour * 24 * 30),
+		SubscriptionExpiresAt: &expiresAt,
 	}
 	if err := s.Storage.CreateUser(ctx, u); err != nil {
 		return "", "", err

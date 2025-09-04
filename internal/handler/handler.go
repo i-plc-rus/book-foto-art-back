@@ -4,6 +4,7 @@ import (
 	"book-foto-art-back/internal/service"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -19,6 +20,7 @@ import (
 
 type Handler struct {
 	userService       *service.UserService
+	paymentService    *service.PaymentService
 	oauthService      *service.YandexOAuthService
 	collectionService *service.CollectionService
 	uploadService     *service.UploadService
@@ -26,12 +28,14 @@ type Handler struct {
 
 func NewHandler(
 	userService *service.UserService,
+	paymentService *service.PaymentService,
 	oauthService *service.YandexOAuthService,
 	collectionService *service.CollectionService,
 	uploadService *service.UploadService,
 ) *Handler {
 	return &Handler{
 		userService:       userService,
+		paymentService:    paymentService,
 		oauthService:      oauthService,
 		collectionService: collectionService,
 		uploadService:     uploadService,
@@ -56,6 +60,35 @@ func (h *Handler) AuthMiddleware() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+// func (h *Handler) SubscriptionMiddleware() gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		userIDStr := c.GetString("user_id")
+// 		userID, err := uuid.Parse(userIDStr)
+// 		if err != nil {
+// 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+// 			c.Abort()
+// 			return
+// 		}
+// 		active, err := h.subscriptionService.CheckSubscription(c.Request.Context(), userID)
+// 		if err != nil {
+// 			log.Printf("Failed to check subscription: %v", err)
+// 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to check subscription"})
+// 			c.Abort()
+// 			return
+// 		}
+// 		if !active {
+// 			c.JSON(http.StatusPaymentRequired, gin.H{
+// 				"error":       "Subscription required",
+// 				"message":     "Для использования сервиса необходима активная подписка",
+// 				"payment_url": os.Getenv("FRONTEND_URL") + "/subscription",
+// 			})
+// 			c.Abort()
+// 			return
+// 		}
+// 		c.Next()
+// 	}
+// }
 
 // Register godoc
 // @Summary      Регистрация нового пользователя
@@ -331,6 +364,73 @@ func (h *Handler) GetProfile(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"id": user.ID, "email": user.Email})
+}
+
+func (h *Handler) CreatePayment(c *gin.Context) {
+	userIDStr := c.GetString("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+	plan := c.Request.FormValue("plan")
+	if plan == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid plan"})
+		return
+	}
+	confirmationURL, err := h.paymentService.CreatePayment(c.Request.Context(), userID, plan)
+	if err != nil {
+		log.Printf("Failed to create payment: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create payment"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"confirmation_url": confirmationURL})
+}
+
+func (h *Handler) GetPaymentStatus(c *gin.Context) {
+	userIDStr := c.GetString("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+	paymentID := c.Param("payment_id")
+	payment, err := h.paymentService.GetPayment(c.Request.Context(), userID, paymentID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get payment"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": payment.Status})
+}
+
+func (h *Handler) YoomoneyWebhook(c *gin.Context) {
+	// Читаем тело запроса
+	body, err := c.GetRawData()
+	if err != nil {
+		log.Printf("Failed to read request body\n")
+		return
+	}
+
+	// Проверяем подпись webhook'а
+	signature := c.GetHeader("X-YooMoney-Signature")
+	if !h.paymentService.VerifyWebhook(body, signature) {
+		log.Printf("Invalid signature webhook signature\n")
+		return
+	}
+
+	// Парсим событие
+	var event map[string]interface{}
+	if err := json.Unmarshal(body, &event); err != nil {
+		log.Printf("Failed to parse event\n")
+		return
+	}
+
+	// Обрабатываем событие
+	if err := h.paymentService.ProcessWebhook(c.Request.Context(), event); err != nil {
+		log.Printf("Failed to process webhook: %v\n", err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": "true"})
 }
 
 // CreateCollection godoc

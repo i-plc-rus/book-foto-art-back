@@ -11,6 +11,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/minio-go/v7 v7.0.95
+	github.com/rvinnie/yookassa-sdk-go v0.0.0-20250830163037-862d0cc32bb0
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0

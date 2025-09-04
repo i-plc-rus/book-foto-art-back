@@ -52,10 +52,12 @@ func main() {
 	oauthService := service.NewYandexOAuthService(service.NewYandexOAuthConfig(), pgStorage)
 	collectionService := service.NewCollectionService(pgStorage, s3Storage)
 	uploadService := service.NewUploadService(pgStorage, s3Storage)
+	paymentService := service.NewPaymentService(pgStorage)
 
 	// Обработчик
 	h := handler.NewHandler(
 		userService,
+		paymentService,
 		oauthService,
 		collectionService,
 		uploadService,
@@ -102,12 +104,21 @@ func main() {
 	{
 		profile.Use(h.AuthMiddleware())
 		profile.GET("/", h.GetProfile)
+		profile.POST("/subscription/extend", h.CreatePayment)
+		profile.GET("/subscription/result/:payment_id", h.GetPaymentStatus)
+	}
+
+	// События от Юмани
+	yoomoney := r.Group("/yoomoney")
+	{
+		yoomoney.POST("/webhook", h.YoomoneyWebhook)
 	}
 
 	// Коллекции
 	collection := r.Group("/collection")
 	{
 		collection.Use(h.AuthMiddleware())
+		// collection.Use(h.SubscriptionMiddleware())
 		collection.POST("/create", h.CreateCollection)
 		collection.GET("/list", h.ListCollections)
 		collection.GET("/:id", h.GetCollectionInfo)
@@ -132,6 +143,7 @@ func main() {
 	upload := r.Group("/upload")
 	{
 		upload.Use(h.AuthMiddleware())
+		// upload.Use(h.SubscriptionMiddleware())
 		upload.POST("/files", h.UploadFiles)
 	}
 

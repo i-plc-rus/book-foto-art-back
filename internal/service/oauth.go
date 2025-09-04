@@ -14,12 +14,6 @@ import (
 	"book-foto-art-back/internal/storage/postgres"
 )
 
-type OAuthConfig struct {
-	ClientID     string
-	ClientSecret string
-	RedirectURL  string
-}
-
 func NewYandexOAuthConfig() *oauth2.Config {
 	return &oauth2.Config{
 		ClientID:     os.Getenv("YANDEX_CLIENT_ID"),

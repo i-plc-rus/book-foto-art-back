@@ -119,7 +119,7 @@ func (s *PaymentService) GetPayment(ctx context.Context, userID uuid.UUID, payme
 
 func (s *PaymentService) VerifyWebhook(body []byte, signature string) bool {
 	// HMAC-SHA256 от тела запроса с использованием секретного ключа
-	secretKey := os.Getenv("YOO_KASSA_SECRET_KEY")
+	secretKey := os.Getenv("YOOKASSA_SECRET_KEY")
 	if secretKey == "" {
 		return false
 	}

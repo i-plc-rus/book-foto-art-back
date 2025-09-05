@@ -661,6 +661,12 @@ const docTemplate = `{
                         "description": "Сортировка. Возможные значения: uploaded_new (по дате загрузки, новые сверху), uploaded_old (по дате загрузки, старые сверху), name_az (по имени файла, A-Z), name_za (по имени файла, Z-A), random (случайный порядок). По умолчанию: uploaded_new",
                         "name": "sort",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Фильтр любимых фотографий. Возможные значения: true (только любимые фотографии), false (все фотографии). По умолчанию: false",
+                        "name": "favorites_only",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -670,8 +676,20 @@ const docTemplate = `{
                             "$ref": "#/definitions/model.CollectionPhotosResponse"
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/model.ErrorMessage"
                         }
@@ -898,6 +916,12 @@ const docTemplate = `{
                         "description": "Сортировка. Возможные значения: uploaded_new (по дате загрузки, новые сверху), uploaded_old (по дате загрузки, старые сверху), name_az (по имени файла, A-Z), name_za (по имени файла, Z-A), random (случайный порядок). По умолчанию: uploaded_new",
                         "name": "sort",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Фильтр любимых фотографий. Возможные значения: true (только любимые фотографии), false (все фотографии). По умолчанию: false",
+                        "name": "favorites_only",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -909,6 +933,69 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    }
+                }
+            }
+        },
+        "/public/{photo_id}/mark": {
+            "post": {
+                "description": "Отмечает фотографию по ID и параметру action",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public"
+                ],
+                "summary": "Отметить фотографию",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID фотографии",
+                        "name": "photo_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "action = favorite или unfavorite",
+                        "name": "action",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.BooleanResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/model.ErrorMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/model.ErrorMessage"
                         }
@@ -1335,6 +1422,10 @@ const docTemplate = `{
                 "id": {
                     "type": "string",
                     "example": "06301788-e325-488f-94b5-1711e211b82a"
+                },
+                "is_favorite": {
+                    "type": "boolean",
+                    "example": false
                 },
                 "original_url": {
                     "type": "string"

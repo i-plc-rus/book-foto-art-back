@@ -133,7 +133,8 @@ func (s *Storage) UpdateCollectionCover(
 	return nil
 }
 
-func (s *Storage) GetCollectionPhotos(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, sort shared.SortOption) (
+func (s *Storage) GetCollectionPhotos(
+	ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, sort shared.SortOption, favoritesOnly bool) (
 	[]model.UploadedPhoto, error) {
 
 	// Определяем SQL для сортировки
@@ -154,9 +155,9 @@ func (s *Storage) GetCollectionPhotos(ctx context.Context, userID uuid.UUID, col
 	}
 
 	rows, err := s.DB.Query(ctx,
-		`SELECT id, collection_id, user_id, original_url, thumbnail_url, file_name, file_ext, hash_name, uploaded_at
+		`SELECT id, collection_id, user_id, original_url, thumbnail_url, file_name, file_ext, hash_name, uploaded_at, is_favorite
 		 FROM uploaded_photos
-		 WHERE user_id = $1 AND collection_id = $2`+orderBy, userID, collectionID,
+		 WHERE user_id = $1 AND collection_id = $2 AND (is_favorite = $3 OR $3 = false)`+orderBy, userID, collectionID, favoritesOnly,
 	)
 	if err != nil {
 		return nil, err
@@ -167,7 +168,7 @@ func (s *Storage) GetCollectionPhotos(ctx context.Context, userID uuid.UUID, col
 	for rows.Next() {
 		var f model.UploadedPhoto
 		if err := rows.Scan(&f.ID, &f.CollectionID, &f.UserID, &f.OriginalURL, &f.ThumbnailURL,
-			&f.FileName, &f.FileExt, &f.HashName, &f.UploadedAt); err != nil {
+			&f.FileName, &f.FileExt, &f.HashName, &f.UploadedAt, &f.IsFavorite); err != nil {
 			return nil, err
 		}
 		result = append(result, f)
@@ -251,7 +252,7 @@ func (s *Storage) GetPublicCollectionInfo(ctx context.Context, token string) (*m
 	return &col, nil
 }
 
-func (s *Storage) GetPublicCollectionPhotos(ctx context.Context, token string, sort shared.SortOption) (
+func (s *Storage) GetPublicCollectionPhotos(ctx context.Context, token string, sort shared.SortOption, favoritesOnly bool) (
 	[]model.UploadedPhoto, error) {
 
 	// Определяем SQL для сортировки
@@ -272,9 +273,10 @@ func (s *Storage) GetPublicCollectionPhotos(ctx context.Context, token string, s
 	}
 
 	rows, err := s.DB.Query(ctx,
-		`SELECT id, collection_id, user_id, original_url, thumbnail_url, file_name, file_ext, hash_name, uploaded_at
+		`SELECT id, collection_id, user_id, original_url, thumbnail_url, file_name, file_ext, hash_name, uploaded_at, is_favorite
 		 FROM uploaded_photos
-		 WHERE collection_id = (SELECT collection_id FROM short_links WHERE token = $1)`+orderBy, token,
+		 WHERE collection_id = (SELECT collection_id FROM short_links WHERE token = $1) AND
+		 					   (is_favorite = $2 OR $2 = false)`+orderBy, token, favoritesOnly,
 	)
 	if err != nil {
 		return nil, err
@@ -285,7 +287,7 @@ func (s *Storage) GetPublicCollectionPhotos(ctx context.Context, token string, s
 	for rows.Next() {
 		var f model.UploadedPhoto
 		if err := rows.Scan(&f.ID, &f.CollectionID, &f.UserID, &f.OriginalURL, &f.ThumbnailURL,
-			&f.FileName, &f.FileExt, &f.HashName, &f.UploadedAt); err != nil {
+			&f.FileName, &f.FileExt, &f.HashName, &f.UploadedAt, &f.IsFavorite); err != nil {
 			return nil, err
 		}
 		result = append(result, f)
@@ -364,6 +366,22 @@ func (s *Storage) DeletePhoto(ctx context.Context, userID uuid.UUID, photoID uui
 		DELETE FROM uploaded_photos
 		WHERE user_id = $1 AND id = $2
 	`, userID, photoID)
+	if err != nil {
+		return err
+	}
+	rowsAffected := res.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
+
+func (s *Storage) MarkPhoto(ctx context.Context, photoID uuid.UUID, isFavorite bool) error {
+	res, err := s.DB.Exec(ctx, `
+		UPDATE uploaded_photos
+		SET is_favorite = $2
+		WHERE id = $1
+	`, photoID, isFavorite)
 	if err != nil {
 		return err
 	}

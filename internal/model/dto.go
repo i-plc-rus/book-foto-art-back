@@ -124,6 +124,7 @@ type UploadedFile struct {
 	FileExt      string    `json:"file_ext"`
 	HashName     string    `json:"hash_name"`
 	UploadedAt   time.Time `json:"uploaded_at" example:"2025-0715:12:00Z"`
+	IsFavorite   bool      `json:"is_favorite" example:"false"`
 }
 
 type UploadFilesResponse struct {

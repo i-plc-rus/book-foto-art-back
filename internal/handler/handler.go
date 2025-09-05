@@ -82,7 +82,7 @@ func (h *Handler) SubscriptionMiddleware() gin.HandlerFunc {
 			c.JSON(http.StatusPaymentRequired, gin.H{
 				"error":       "Subscription required",
 				"message":     "Для использования сервиса необходима активная подписка",
-				"payment_url": os.Getenv("FRONTEND_URL"),
+				"payment_url": os.Getenv("FRONTEND_URL") + "/tariffs",
 			})
 			c.Abort()
 			return
@@ -552,8 +552,11 @@ func (h *Handler) GetCollectionInfo(c *gin.Context) {
 // @Produce      json
 // @Param        id   path   string true  "ID коллекции"
 // @Param        sort query  string false "Сортировка. Возможные значения: uploaded_new (по дате загрузки, новые сверху), uploaded_old (по дате загрузки, старые сверху), name_az (по имени файла, A-Z), name_za (по имени файла, Z-A), random (случайный порядок). По умолчанию: uploaded_new"
+// @Param        favorites_only query  string false "Фильтр любимых фотографий. Возможные значения: true (только любимые фотографии), false (все фотографии). По умолчанию: false"
 // @Success      200  {object} model.CollectionPhotosResponse
 // @Failure      404  {object} model.ErrorMessage
+// @Failure      400  {object} model.ErrorMessage
+// @Failure      500  {object} model.ErrorMessage
 // @Router       /collection/{id}/photos [get]
 func (h *Handler) GetCollectionPhotos(c *gin.Context) {
 	// Получаем user_id из контекста
@@ -574,8 +577,9 @@ func (h *Handler) GetCollectionPhotos(c *gin.Context) {
 		return
 	}
 	sortParam := c.Query("sort")
-
-	photos, sort, err := h.collectionService.GetCollectionPhotos(c.Request.Context(), userID, collectionID, sortParam)
+	favoritesOnly := c.Query("favorites_only") == "true"
+	photos, sort, err := h.collectionService.GetCollectionPhotos(
+		c.Request.Context(), userID, collectionID, sortParam, favoritesOnly)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
@@ -666,16 +670,18 @@ func (h *Handler) RedirectToPublicCollection(c *gin.Context) {
 // @Produce      json
 // @Param        token   path   string true  "Токен короткой ссылки"
 // @Param        sort query  string false "Сортировка. Возможные значения: uploaded_new (по дате загрузки, новые сверху), uploaded_old (по дате загрузки, старые сверху), name_az (по имени файла, A-Z), name_za (по имени файла, Z-A), random (случайный порядок). По умолчанию: uploaded_new"
+// @Param        favorites_only query  string false "Фильтр любимых фотографий. Возможные значения: true (только любимые фотографии), false (все фотографии). По умолчанию: false"
 // @Success      200  {object} model.PublicCollectionResponse
 // @Failure      404  {object} model.ErrorMessage
+// @Failure      500  {object} model.ErrorMessage
 // @Router       /public/collection/{token}/photos [get]
 func (h *Handler) GetPublicCollection(c *gin.Context) {
 	// Получаем параметры из контекста и URL
 	token := c.Param("token")
 	sortParam := c.Query("sort")
-
+	favoritesOnly := c.Query("favorites_only") == "true"
 	collection, photos, sort, err := h.collectionService.GetPublicCollection(
-		c.Request.Context(), token, sortParam)
+		c.Request.Context(), token, sortParam, favoritesOnly)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Collection not found"})
@@ -987,6 +993,42 @@ func (h *Handler) UpdateCollectionCover(c *gin.Context) {
 		return
 	}
 
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+// MarkAsFavorite godoc
+// @Summary      Отметить фотографию
+// @Description  Отмечает фотографию по ID и параметру action
+// @Tags         Public
+// @Accept       json
+// @Produce      json
+// @Param        photo_id path string true "ID фотографии"
+// @Param        action formData string true "action = favorite или unfavorite"
+// @Success      200 {object} model.BooleanResponse
+// @Failure      404 {object} model.ErrorMessage
+// @Failure      400 {object} model.ErrorMessage
+// @Failure      500 {object} model.ErrorMessage
+// @Router       /public/{photo_id}/mark [post]
+func (h *Handler) MarkPhoto(c *gin.Context) {
+	photoIDStr := c.Param("photo_id")
+	photoID, err := uuid.Parse(photoIDStr)
+	if err != nil {
+		log.Printf("Invalid photo ID: %v\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid photo ID"})
+		return
+	}
+	action := c.PostForm("action")
+	err = h.collectionService.MarkPhoto(c.Request.Context(), photoID, action)
+	if err != nil {
+		if err.Error() == "invalid action" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid action"})
+		} else if errors.Is(err, sql.ErrNoRows) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Photo not found or already marked"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to mark photo"})
+		}
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
 

@@ -16,4 +16,5 @@ type UploadedPhoto struct {
 	FileExt      string    `json:"file_ext"`
 	HashName     string    `json:"hash_name"`
 	UploadedAt   time.Time `json:"uploaded_at"`
+	IsFavorite   bool      `json:"is_favorite"`
 }

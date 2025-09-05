@@ -232,6 +232,9 @@ definitions:
       id:
         example: 06301788-e325-488f-94b5-1711e211b82a
         type: string
+      is_favorite:
+        example: false
+        type: boolean
       original_url:
         type: string
       thumbnail_url:
@@ -594,6 +597,11 @@ paths:
         in: query
         name: sort
         type: string
+      - description: 'Фильтр любимых фотографий. Возможные значения: true (только
+          любимые фотографии), false (все фотографии). По умолчанию: false'
+        in: query
+        name: favorites_only
+        type: string
       produces:
       - application/json
       responses:
@@ -601,8 +609,16 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.CollectionPhotosResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/model.ErrorMessage'
       summary: Получить фотографии коллекции
@@ -851,6 +867,44 @@ paths:
       summary: Получить статус платежа
       tags:
       - Profile
+  /public/{photo_id}/mark:
+    post:
+      consumes:
+      - application/json
+      description: Отмечает фотографию по ID и параметру action
+      parameters:
+      - description: ID фотографии
+        in: path
+        name: photo_id
+        required: true
+        type: string
+      - description: action = favorite или unfavorite
+        in: formData
+        name: action
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.BooleanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+      summary: Отметить фотографию
+      tags:
+      - Public
   /public/collection/{token}/photos:
     get:
       consumes:
@@ -869,6 +923,11 @@ paths:
         in: query
         name: sort
         type: string
+      - description: 'Фильтр любимых фотографий. Возможные значения: true (только
+          любимые фотографии), false (все фотографии). По умолчанию: false'
+        in: query
+        name: favorites_only
+        type: string
       produces:
       - application/json
       responses:
@@ -878,6 +937,10 @@ paths:
             $ref: '#/definitions/model.PublicCollectionResponse'
         "404":
           description: Not Found
+          schema:
+            $ref: '#/definitions/model.ErrorMessage'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/model.ErrorMessage'
       summary: Получить публичную коллекцию

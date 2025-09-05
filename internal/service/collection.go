@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -67,7 +68,8 @@ func (s *CollectionService) DeleteCollection(ctx context.Context, userID uuid.UU
 	return nil
 }
 
-func (s *CollectionService) GetCollectionPhotos(ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, sortParam string) (
+func (s *CollectionService) GetCollectionPhotos(
+	ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, sortParam string, favoritesOnly bool) (
 	[]model.UploadedPhoto, string, error) {
 	// Выбираем параметр сортировки
 	sort := shared.SortOption(sortParam)
@@ -75,7 +77,7 @@ func (s *CollectionService) GetCollectionPhotos(ctx context.Context, userID uuid
 		sort = shared.DefaultSort
 	}
 	// Получаем содержимое коллекции из БД
-	photos, err := s.Postgres.GetCollectionPhotos(ctx, userID, collectionID, sort)
+	photos, err := s.Postgres.GetCollectionPhotos(ctx, userID, collectionID, sort, favoritesOnly)
 	if err != nil {
 		log.Printf("Storage ERROR: %v\n", err)
 		return []model.UploadedPhoto{}, "", err
@@ -111,9 +113,9 @@ func (s *CollectionService) GetPublicCollectionLink(ctx context.Context, token s
 	return link, nil
 }
 
-func (s *CollectionService) GetPublicCollection(ctx context.Context, token string, sortParam string) (
+func (s *CollectionService) GetPublicCollection(
+	ctx context.Context, token string, sortParam string, favoritesOnly bool) (
 	*model.Collection, []model.UploadedPhoto, string, error) {
-
 	// Получаем информацию о публичной коллекции
 	collection, err := s.Postgres.GetPublicCollectionInfo(ctx, token)
 	if err != nil {
@@ -127,7 +129,7 @@ func (s *CollectionService) GetPublicCollection(ctx context.Context, token strin
 		sort = shared.DefaultSort
 	}
 	// Получаем фотографии коллекции из БД
-	photos, err := s.Postgres.GetPublicCollectionPhotos(ctx, token, sort)
+	photos, err := s.Postgres.GetPublicCollectionPhotos(ctx, token, sort, favoritesOnly)
 	if err != nil {
 		log.Printf("Storage ERROR: %v\n", err)
 		return nil, []model.UploadedPhoto{}, "", err
@@ -170,4 +172,21 @@ func (s *CollectionService) DeletePhoto(ctx context.Context, userID uuid.UUID, p
 func (s *CollectionService) UpdateCollectionCover(
 	ctx context.Context, userID uuid.UUID, collectionID uuid.UUID, uploadedPhotoID uuid.UUID) error {
 	return s.Postgres.UpdateCollectionCover(ctx, userID, collectionID, uploadedPhotoID)
+}
+
+func (s *CollectionService) MarkPhoto(ctx context.Context, photoID uuid.UUID, action string) error {
+	var isFavorite bool
+	switch action {
+	case "favorite":
+		isFavorite = true
+	case "unfavorite":
+		isFavorite = false
+	default:
+		return errors.New("invalid action")
+	}
+	err := s.Postgres.MarkPhoto(ctx, photoID, isFavorite)
+	if err != nil {
+		return err
+	}
+	return nil
 }

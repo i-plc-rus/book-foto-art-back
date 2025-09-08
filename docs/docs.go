@@ -900,7 +900,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Collection"
+                    "Public"
                 ],
                 "summary": "Получить публичную коллекцию",
                 "parameters": [
